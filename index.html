@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saturation Map</title>
+  <script src="https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@^5.24.0/dist/maplibre-gl.css" rel="stylesheet" />
+  <style>
+    :root { color-scheme: light; --accent: #2563eb;}
+    body.dark { color-scheme: dark; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { width: 100%; height: 100%; }
+
+    #map { position: absolute; inset: 0; }
+
+    #controls { position: absolute; top: 1.5rem; right: 0.75rem; z-index: 10;}
+    #download-split { position: relative; display: flex; border-radius: 5rem; overflow: hidden; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    #download-btn { position: relative; padding: 0 0.75rem; height: 2.75rem; font-size: 0.85rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 500; background: transparent; color: light-dark(#374151, #e5e7eb); border: none; border-radius: 0; cursor: pointer; transition: background 0.15s; box-shadow: none; display: flex; align-items: center; gap: 0.35rem; }
+    #change-badge { background: var(--accent); color: #fff; font-size: 0.825rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 600; min-width: 1.5rem; height: 1.5rem; border-radius: 999px; pointer-events: none; display: none; align-items: center; justify-content: center; text-align: center; padding: 0 4px; flex-shrink: 0; }
+    #download-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
+    #export-btn { width: 2.75rem; height: 2.75rem; padding: 0; display: flex; align-items: center; justify-content: center; border: none; border-left: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); border-radius: 0; background: transparent; color: light-dark(#374151, #e5e7eb); cursor: pointer; transition: background 0.15s; box-shadow: none; }
+    #export-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
+
+    #sidebar {
+      position: absolute;
+      left: 0.75rem; top: calc(0.75rem + 2.75rem + 1.5rem); bottom: 0.75rem;
+      width: 210px;
+      background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5));
+      backdrop-filter: blur(30px);
+      border-radius: 1.375rem;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08));
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #sidebar-header { flex-shrink: 0; padding: 0.75rem; }
+    #add-cache-split { position: absolute; left: 0.75rem; top: 1.5rem; z-index: 11; display: flex; width: 210px; border-radius: 3rem; overflow: hidden; background: light-dark(#2563eb, rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(transparent, rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+    #sidebar-main { flex: 1; overflow-y: auto; padding: 0.25rem 0.25rem; }
+
+    #sidebar-footer {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.75rem 0.75rem;
+    }
+
+    #cache-count {
+      font-size: 0.75rem;
+      color: light-dark(#9ca3af, #6b7280);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    #theme-btn {
+      width: 28px; height: 28px; padding: 0;
+      border-radius: 0.5rem;
+      background: none;
+      color: light-dark(#374151, #e5e7eb);
+      border: none; box-shadow: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+
+    #theme-btn:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    #cache-list { list-style: none; display: flex; flex-direction: column; }
+
+    #cache-list li {
+      height: 2.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.9375rem;
+      color: light-dark(#1a1a1a, #e5e7eb);
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      transition: background 0.12s;
+    }
+
+    #cache-list li:hover { background: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.07)); }
+    .cache-dot { width: 0.875rem; height: 0.875rem; border: 1px solid rgba(255,255,255,0.5); border-radius: 50%; flex-shrink: 0; }
+    .cache-list-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    button {
+      padding: 0.6rem 1.25rem;
+      height: 2.75rem;
+      font-size: 0.9rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 500;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 0.625rem;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #1d4ed8; }
+    button:active { background: #1e40af; }
+
+    .maplibregl-popup-content {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: light-dark(#fff, #1f2937);
+      padding: 0;
+      border-radius: 1.25rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      min-width: 220px;
+      overflow: hidden;
+    }
+
+    .maplibregl-popup-close-button { box-shadow: none; font-size: 1.1rem; padding: 0.4rem 0.7rem; color: #6b7280;}
+    .maplibregl-popup-close-button:hover { background: none; color: #111;}
+    
+    .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+    .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+    .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { border-top-color: light-dark(#fff, #1f2937); }
+    .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+    .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+    .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { border-bottom-color: light-dark(#fff, #1f2937); }
+    .maplibregl-popup-anchor-left .maplibregl-popup-tip  { border-right-color: light-dark(#fff, #1f2937); }
+    .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color:  light-dark(#fff, #1f2937); }
+
+    .popup-inner { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+
+    .popup-gc { font-size: 0.875rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    .popup-gc a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3em; transition: color 0.15s; }
+    .popup-gc a:hover { color: light-dark(#374151, #d1d5db); }
+
+    .popup-name { font-size: 1.0625rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .popup-coords { font-size: 0.875rem; color: light-dark(#9ca3af, #6b7280); margin-bottom: 0.5rem; }
+
+    .popup-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+
+    .popup-btn {
+      flex: 1; padding: 0.5rem 0;
+      font-size: 0.85rem; font-family: inherit; font-weight: 500;
+      border: none; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s;
+      box-shadow: none;
+    }
+
+    .popup-edit { background: light-dark(#f3f4f6, #374151); color: light-dark(#6b7280, #9ca3af); }
+    .popup-edit:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    .popup-delete {
+      flex: none; width: 2.75rem; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #FF5252; color: #fff;
+    }
+    .popup-delete:hover { background: #E53935; }
+
+    .popup-confirm { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .popup-confirm-text { font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: light-dark(#374151, #d1d5db); }
+    .popup-confirm-actions { display: flex; gap: 0.5rem; }
+    .popup-confirm-yes { flex: 1; padding: 0.5rem 0; font-size: 0.85rem; font-family: inherit; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; box-shadow: none; background: #FF5252; color: #fff; transition: background 0.15s; }
+    .popup-confirm-yes:hover { background: #D32F2F; }
+    .popup-confirm-no { flex: 1; padding: 0.5rem 0; font-size: 0.85rem; font-family: inherit; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; box-shadow: none; background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); transition: background 0.15s; }
+    .popup-confirm-no:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    .popup-save-edit { background: #2563eb; color: #fff; }
+    .popup-save-edit:hover { background: #1d4ed8; }
+
+    .popup-cancel-edit { background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); }
+    .popup-cancel-edit:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    .popup-edit-fields { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
+
+    .popup-edit-fields label {
+      display: flex; flex-direction: column; gap: 0.2rem;
+      font-size: 0.72rem; font-weight: 600;
+      color: light-dark(#6b7280, #9ca3af);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    .popup-edit-fields input {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.88rem; font-family: inherit;
+      background: light-dark(#fff, #374151);
+      border: 1px solid light-dark(#d1d5db, #4b5563);
+      border-radius: 6px; outline: none;
+      color: light-dark(#111827, #f3f4f6);
+      transition: border-color 0.15s;
+    }
+
+    .popup-edit-fields input:focus { border-color: light-dark(#2563eb, #3b82f6); }
+
+    #add-cache-btn {
+      flex: 1; padding: 0 0.9rem; height: 2.75rem; display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.85rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 500; border: none; border-radius: 0;
+      cursor: pointer; transition: background 0.15s; box-shadow: none;
+      background: transparent; color: light-dark(#fff, #e5e7eb);
+    }
+
+    #add-cache-btn:hover { background: light-dark(rgba(0,0,0,0.12), rgba(17,24,39,0.7)); }
+
+    #import-btn {
+      width: 2.75rem; height: 2.75rem; padding: 0; border: none;
+      border-left: 1px solid light-dark(rgba(255,255,255,0.2), rgba(255,255,255,0.08)); border-radius: 0;
+      cursor: pointer; transition: background 0.15s; box-shadow: none;
+      background: transparent; color: light-dark(#fff, #e5e7eb);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #search-bar {
+      display: flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.5rem;
+      background:rgba(0,0,0,0.05);
+      border-radius: 0.625rem;
+      height: 2.25rem;
+      color: light-dark(#9ca3af, #6b7280);
+    }
+
+    #search-bar svg { flex-shrink: 0; }
+
+    #search-input {
+      flex: 1; border: none; outline: none; background: none;
+      font-size: 0.875rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: light-dark(#111827, #f3f4f6);
+    }
+
+    #search-input::placeholder { color: light-dark(#9ca3af, #6b7280); }
+
+
+    #import-btn:hover { background: rgba(0,0,0,0.12); }
+
+    #search-empty {
+      font-size: 0.8rem; padding: 0.5rem 0.4rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: light-dark(#9ca3af, #6b7280);
+    }
+
+    #modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 100;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+
+    #modal-overlay.open { display: flex; }
+
+    #modal {
+      background: light-dark(#fff, #1f2937);
+      border-radius: 1.375rem; padding: 0.75rem; width: 300px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+
+    .modal-fields { display: flex; flex-direction: column; gap: 0.65rem; }
+
+    .modal-fields label, .modal-fields .modal-field {
+      display: flex; flex-direction: column; gap: 0.25rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.78rem; font-weight: 500;
+      color: light-dark(#6b7280, #9ca3af);
+      letter-spacing: 0.04em;
+    }
+
+    .modal-fields input,
+    .modal-fields select {
+      padding: 0.45rem 0.6rem; font-size: 0.9rem; font-family: inherit;
+      height: 2.75rem;
+      background: light-dark(#fff, #374151);
+      border: 1px solid light-dark(#d1d5db, #4b5563);
+      border-radius: 0.625rem; outline: none;
+      color: light-dark(#111827, #f3f4f6);
+      transition: border-color 0.15s;
+    }
+    .modal-fields select { appearance: none; cursor: pointer; padding-right: 1.75rem; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; }
+
+    .modal-fields input:focus,
+    .modal-fields select:focus { border-color: light-dark(#2563eb, #3b82f6); }
+
+    .type-select-wrapper { position: relative; }
+    .type-color-group { display: flex; min-height: 2.25rem; border: 1px solid light-dark(#d1d5db, #4b5563); border-radius: 0.625rem; background: light-dark(#fff, #374151); transition: border-color 0.15s; }
+    .type-select-wrapper:has(details[open]) .type-color-group { border-bottom-right-radius: 0; }
+    #f-type-color-btn { width: 2.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: none; border-right: 1px solid light-dark(#d1d5db, #4b5563); border-radius: 0.625rem 0 0 0.625rem; background: transparent; cursor: pointer; padding: 0; transition: background 0.15s; box-shadow: none; }
+    #f-type-color-btn:hover { background: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.06)); }
+    .type-details { flex: 1; display: flex; flex-direction: column; position: relative; }
+    .type-details summary { flex: 1; list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 0 0.6rem 0 0.75rem; cursor: pointer; font-size: 0.9rem; font-family: inherit; font-weight: 400; color: light-dark(#111827, #f3f4f6); user-select: none; }
+    .type-details summary::-webkit-details-marker { display: none; }
+    .type-details summary::marker { display: none; }
+    .type-chevron { flex-shrink: 0; opacity: 0.5; transition: transform 0.15s; }
+    details[open] .type-chevron { transform: rotate(180deg); }
+    .type-options { position: absolute; top: 100%; left: -1px; right: -1px; z-index: 200; background: light-dark(#fff, #374151); border: 1px solid light-dark(#d1d5db, #4b5563); border-top: none; border-radius: 0 0 0.625rem 0.625rem; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,0.14); }
+    .type-option { padding: 0.55rem 0.75rem; font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; color: light-dark(#111827, #f3f4f6); transition: background 0.1s; }
+    .type-option:hover { background: light-dark(rgba(0,0,0,0.05), rgba(255,255,255,0.06)); }
+    .type-option.selected { color: light-dark(#2563eb, #60a5fa); font-weight: 500; }
+
+    .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+    .modal-footer button {
+      padding: 0.45rem 1rem; font-size: 0.85rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 500; border: none; border-radius: 0.625rem;
+      cursor: pointer; box-shadow: none; transition: background 0.15s;
+    }
+
+    #modal-cancel { background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); }
+    #modal-cancel:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    #modal-save { background: #2563eb; color: #fff; }
+    #modal-save:hover { background: #1d4ed8; }
+
+    #remind-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 200;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    #remind-overlay.open { display: flex; }
+    #remind-modal {
+      background: light-dark(#fff, #1f2937);
+      border-radius: 1.375rem; padding: 1.25rem 0.75rem 0.75rem; width: 300px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; gap: 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #remind-modal h3 {
+      margin: 0; font-size: 0.95rem; font-weight: 600;
+      color: light-dark(#111827, #f3f4f6);
+    }
+    #remind-modal p {
+      margin: 0; font-size: 0.85rem; line-height: 1.5;
+      color: light-dark(#4b5563, #9ca3af);
+    }
+    #remind-modal strong { color: light-dark(#111827, #e5e7eb); }
+    #remind-ok {
+      align-self: flex-end; padding: 0.45rem 1.25rem;
+      font-size: 0.85rem; font-weight: 500;
+      font-family: inherit; border: none; border-radius: 0.625rem;
+      cursor: pointer; background: #2563eb; color: #fff;
+      transition: background 0.15s;
+    }
+    #remind-ok:hover { background: #1d4ed8; }
+
+    .coord-info-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: light-dark(#9ca3af, #6b7280); color: #fff;
+      font-size: 9px; font-weight: 700; font-style: normal; line-height: 1;
+      cursor: default; margin-left: 4px; vertical-align: middle;
+      position: relative; flex-shrink: 0;
+    }
+    .coord-info-icon::after {
+      content: attr(data-tooltip);
+      position: absolute; bottom: calc(100% + 6px); left: 50%;
+      transform: translateX(-50%);
+      background: light-dark(#1f2937, #374151); color: #f9fafb;
+      font-size: 0.75rem; font-weight: 400; font-style: normal;
+      line-height: 1.5; white-space: pre; padding: 0.5rem 0.65rem;
+      border-radius: 0.4rem; pointer-events: none; opacity: 0;
+      transition: opacity 0.15s; z-index: 9999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .coord-info-icon:hover::after { opacity: 1; }
+
+    #pick-btn {
+      position: absolute;
+      top: 1.5rem; left: calc(1rem + 210px + 1rem);
+      z-index: 10; width: 2.75rem; height: 2.75rem; padding: 0 0.6rem;
+      border-radius: 9999px;
+      background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5));
+      backdrop-filter: blur(30px);
+      color: light-dark(#374151, #e5e7eb);
+      border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08));
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s, width 0.2s ease;
+      overflow: hidden; white-space: nowrap;
+    }
+
+    #pick-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
+    #pick-btn.active { background: #2563eb; color: #fff; width: auto; }
+    #pick-btn-label:not(:empty) { margin-left: 0.35rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; }
+
+    .coord-popup-inner {
+      padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-width: 200px;
+    }
+
+    .coord-popup-value { font-size: 0.95rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); }
+
+    .coord-copy-btn {
+      margin-top: 0.25rem; padding: 0.4rem 0;
+      font-size: 0.82rem; font-family: inherit; font-weight: 500;
+      background: light-dark(#f3f4f6, #374151);
+      color: light-dark(#374151, #e5e7eb);
+      border: none; border-radius: 6px; cursor: pointer;
+      transition: background 0.15s; box-shadow: none;
+    }
+
+    .coord-copy-btn:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    .coord-add-btn {
+      margin-top: 0.25rem; padding: 0.4rem 0;
+      font-size: 0.82rem; font-family: inherit; font-weight: 500;
+      background: light-dark(#374151, #1f2937);
+      color: light-dark(#fff, #e5e7eb);
+      border: none; border-radius: 0.5rem; cursor: pointer;
+      transition: background 0.15s; box-shadow: none;
+    }
+
+    .coord-add-btn:hover { background: light-dark(#1f2937, #111827); }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <button id="pick-btn" title="Pick coordinates" onclick="togglePickMode()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <line x1="12" y1="2" x2="12" y2="6"/>
+      <line x1="12" y1="18" x2="12" y2="22"/>
+      <line x1="2" y1="12" x2="6" y2="12"/>
+      <line x1="18" y1="12" x2="22" y2="12"/>
+    </svg><span id="pick-btn-label"></span>
+  </button>
+  <div id="add-cache-split">
+    <button id="add-cache-btn" onclick="openModal()"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New cache</button>
+    <button id="import-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 8 12 13 17 8"/>
+        <line x1="12" y1="13" x2="12" y2="1"/>
+      </svg>
+    </button>
+  </div>
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <div id="search-bar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input id="search-input" type="text" placeholder="Cache name or GC" aria-label="Search caches" oninput="filterCaches(this.value)" />
+      </div>
+    </div>
+    <div id="sidebar-main">
+      <ul id="cache-list"></ul>
+      <p id="search-empty" style="display:none;">No matches found</p>
+    </div>
+    <div id="sidebar-footer">
+      <span id="cache-count">0 caches</span>
+      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="modal-overlay">
+    <div id="modal">
+      <div class="modal-fields">
+        <div class="modal-field">Cache Type
+          <div class="type-select-wrapper">
+            <div class="type-color-group">
+              <button type="button" id="f-type-color-btn" onclick="openColorPicker()" title="Pick custom color" aria-label="Pick custom color">
+                <span id="f-type-dot" style="width:1.1rem;height:1.1rem;border-radius:50%;display:block;background:#22c55e;box-shadow:0 0 0 1.5px rgba(0,0,0,0.12);pointer-events:none;"></span>
+              </button>
+              <input type="color" id="f-type-color-input" tabindex="-1" aria-hidden="true" aria-label="Custom cache color" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;" oninput="onColorInput(this.value)" onchange="onColorInput(this.value)">
+              <input type="hidden" id="f-type" value="traditional">
+              <details class="type-details">
+                <summary>
+                  <span id="f-type-display">Traditional</span>
+                  <svg class="type-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+                <div class="type-options">
+                  <div class="type-option selected" data-value="traditional" onclick="selectCacheType('traditional','Traditional')">Traditional</div>
+                  <div class="type-option" data-value="multi" onclick="selectCacheType('multi','Multi')">Multi</div>
+                  <div class="type-option" data-value="mystery" onclick="selectCacheType('mystery','Mystery/Wherigo/Letterbox')">Mystery/Wherigo/Letterbox</div>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+        <label for="f-name">Cache Name
+          <input type="text" id="f-name" placeholder="e.g. Sun Gear" />
+        </label>
+        <label for="f-gc">GC Code
+          <input type="text" id="f-gc" maxlength="7" placeholder="e.g. GC6511N" />
+        </label>
+        <label for="f-coords"><span style="display:flex;align-items:center;gap:4px;">Coordinates<i class="coord-info-icon" data-tooltip="DD (Decimal Degrees):&#10;65.020633, 25.480867&#10;&#10;DMM (Degrees Decimal Minutes):&#10;N65° 01.238 E025° 28.852">i</i></span>
+          <input type="text" id="f-coords" placeholder="e.g. 65.020633, 25.480867" />
+          <span id="f-coords-error" style="display:none;font-size:0.75rem;color:#ef4444;margin-top:-0.1rem;">Invalid coordinate format</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel" onclick="closeModal()">Cancel</button>
+        <button id="modal-save">Place on Map</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="remind-overlay">
+    <div id="remind-modal">
+      <h3>Replace the old file</h3>
+      <p>Up-to-date <strong>map.html</strong> has been downloaded. To avoid confusion, <strong>delete this old file</strong> and open the new one instead.</p>
+      <button id="remind-ok" onclick="document.getElementById('remind-overlay').classList.remove('open')">Got it</button>
+    </div>
+  </div>
+
+  <div id="controls">
+    <div id="download-split">
+      <button id="download-btn" onclick="downloadPage()"><div id="change-badge"></div>Download map.html</button>
+      <button id="export-btn" title="Export" onclick="downloadPage()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+    </div>
+  </div>
+
+  <script>
+    const CENTER = [25.467054, 65.011669]; // [lng, lat]
+
+    /* BEGIN_CACHES */
+    const INITIAL_CACHES = [
+      { cacheName: "Lorem ipsum 1",   gc: "GC10021", cacheType: "traditional", lon: 25.4612, lat: 65.0134 },
+      { cacheName: "Lorem ipsum 2",  gc: "GC10022", cacheType: "mystery",     lon: 25.4701, lat: 65.0098 },
+      { cacheName: "Lorem ipsum 3",        gc: "GC10023", cacheType: "multi",       lon: 25.4755, lat: 65.0151 },
+      { cacheName: "Lorem ipsum 4",     gc: "GC10024", cacheType: "traditional", lon: 25.4689, lat: 65.0162 },
+      { cacheName: "Lorem ipsum 5",   gc: "GC10025", cacheType: "mystery",     lon: 25.4630, lat: 65.0089 },
+      { cacheName: "Lorem ipsum 6",           gc: "GC10026", cacheType: "multi",       lon: 25.4720, lat: 65.0081 },
+      { cacheName: "Lorem ipsum 7",    gc: "GC10027", cacheType: "traditional", lon: 25.4598, lat: 65.0117 },
+      { cacheName: "Lorem ipsum 8",    gc: "GC10028", cacheType: "mystery",     lon: 25.4743, lat: 65.0128 },
+      { cacheName: "Lorem ipsum 9",     gc: "GC10029", cacheType: "multi",       lon: 25.4668, lat: 65.0073 },
+      { cacheName: "Lorem ipsum 10",       gc: "GC10030", cacheType: "traditional", lon: 25.4651, lat: 65.0143 },
+    ];
+    /* END_CACHES */
+
+    let caches = [];
+
+    const TYPE_COLOR = { traditional: "#22c55e", multi: "#FB8C00", mystery: "#1976D2", placeholder: "#6b7280" };
+
+    // IndexedDB helpers
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open("saturation-map", 1);
+        req.onupgradeneeded = e => e.target.result.createObjectStore("caches", { keyPath: "gc" });
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    function dbGetAll(db) {
+      return new Promise((resolve, reject) => {
+        const req = db.transaction("caches", "readonly").objectStore("caches").getAll();
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    function dbSave(db, cache) {
+      return new Promise((resolve, reject) => {
+        const req = db.transaction("caches", "readwrite").objectStore("caches").put(cache);
+        req.onsuccess = () => resolve();
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    function dbDelete(db, gc) {
+      return new Promise((resolve, reject) => {
+        const req = db.transaction("caches", "readwrite").objectStore("caches").delete(gc);
+        req.onsuccess = () => resolve();
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    let db;
+
+    function fromDMM(str) {
+      const m = str.match(/([NS])\s*(\d+)[°d]?\s*([\d.]+)'?\s*([EW])\s*(\d+)[°d]?\s*([\d.]+)'?/i);
+      if (!m) return null;
+      const lat = (parseInt(m[2]) + parseFloat(m[3]) / 60) * (m[1].toUpperCase() === "N" ? 1 : -1);
+      const lon = (parseInt(m[5]) + parseFloat(m[6]) / 60) * (m[4].toUpperCase() === "E" ? 1 : -1);
+      return { lat, lon };
+    }
+
+    function toDMM(lat, lon) {
+      const fmt = (val, posDir, negDir) => {
+        const dir = val >= 0 ? posDir : negDir;
+        const deg = Math.floor(Math.abs(val));
+        const min = ((Math.abs(val) - deg) * 60).toFixed(3).padStart(6, "0");
+        return `${dir} ${String(deg).padStart(posDir === "N" ? 2 : 3, "0")}° ${min}'`;
+      };
+      return `${fmt(lat, "N", "S")} ${fmt(lon, "E", "W")}`;
+    }
+
+    function showPopup(cache) {
+      popup
+        .setLngLat([cache.lon, cache.lat])
+        .setHTML(`
+          <div class="popup-inner">
+            ${cache.cacheType !== "placeholder" ? `<div class="popup-gc"><a href="https://coord.info/${cache.gc}" target="_blank" rel="noopener noreferrer">${cache.gc}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>` : ""}
+            <div class="popup-name">${cache.cacheName}</div>
+            <div class="popup-coords">${toDMM(cache.lat, cache.lon)}</div>
+            <div class="popup-actions">
+              <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')">Edit</button>
+              <button class="popup-btn popup-delete" onclick="showDeleteConfirm('${cache.gc}')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+            </div>
+          </div>
+        `)
+        .addTo(map);
+    }
+
+    function showPopupEditMode(gc) {
+      const cache = caches.find(c => c.gc === gc);
+      if (!cache) return;
+      popup
+        .setLngLat([cache.lon, cache.lat])
+        .setHTML(`
+          <div class="popup-inner">
+            <div class="popup-edit-fields">
+              ${cache.cacheType !== "placeholder" ? `
+              <label for="edit-gc">GC Code
+                <input id="edit-gc" value="${cache.gc}" />
+              </label>
+              <label for="edit-name">Cache Name
+                <input id="edit-name" value="${cache.cacheName}" />
+              </label>` : ""}
+              <label for="edit-coords">Coordinates
+                <input id="edit-coords" value="${toDMM(cache.lat, cache.lon)}" />
+              </label>
+            </div>
+            <div class="popup-actions">
+              <button class="popup-btn popup-cancel-edit" onclick="cancelEdit('${cache.gc}')">Cancel</button>
+              <button class="popup-btn popup-save-edit" onclick="saveEdit('${cache.gc}')">Save</button>
+            </div>
+          </div>
+        `)
+        .addTo(map);
+    }
+
+    function cancelEdit(gc) {
+      const cache = caches.find(c => c.gc === gc);
+      if (cache) showPopup(cache);
+    }
+
+    async function saveEdit(oldGc) {
+      const idx = caches.findIndex(c => c.gc === oldGc);
+      if (idx === -1) return;
+      const oldCache = caches[idx];
+      const gcEl = document.getElementById("edit-gc");
+      const nameEl = document.getElementById("edit-name");
+      const newGc = gcEl ? gcEl.value.trim() : oldCache.gc;
+      const cacheName = nameEl ? nameEl.value.trim() : oldCache.cacheName;
+      const coordRaw = document.getElementById("edit-coords").value.trim();
+
+      if (!newGc || !cacheName || !coordRaw) return;
+      const parsed = fromDMM(coordRaw);
+      if (!parsed) return;
+
+      const { lat, lon } = parsed;
+      const newCache = { cacheName, gc: newGc, cacheType: oldCache.cacheType, lon, lat };
+
+      if (newGc !== oldGc) {
+        // Key changed: delete old IDB record and map layers, add new ones
+        await dbDelete(db, oldGc);
+        const oldId = `cache-${oldGc}`;
+        if (oldCache._mapClickHandler) map.off("click", `${oldId}-fill`, oldCache._mapClickHandler);
+        [`${oldId}-fill`, `${oldId}-outline`, `${oldId}-dot`].forEach(lid => { if (map.getLayer(lid)) map.removeLayer(lid); });
+        [oldId, `${oldId}-dot`].forEach(sid => { if (map.getSource(sid)) map.removeSource(sid); });
+        await dbSave(db, newCache);
+        caches[idx] = newCache;
+        addCacheToMap(newCache);
+      } else {
+        // Same key: update in place
+        await dbSave(db, newCache);
+        caches[idx] = newCache;
+        const id = `cache-${newGc}`;
+        map.getSource(id).setData(geoCircle([lon, lat], RADIUS));
+        map.getSource(`${id}-dot`).setData({ type: "Feature", geometry: { type: "Point", coordinates: [lon, lat] } });
+      }
+
+      // Update sidebar li in place, re-wire click listener
+      const oldLi = oldCache._li;
+      if (oldLi) {
+        oldLi.querySelector(".cache-dot").style.background = color;
+        oldLi.querySelector("span:last-child").textContent = cacheName;
+        const newLi = oldLi.cloneNode(true); // clone removes old event listeners
+        oldLi.parentNode.replaceChild(newLi, oldLi);
+        newCache._li = newLi;
+        newLi.style.cursor = "pointer";
+        newLi.addEventListener("click", () => {
+          map.flyTo({ center: [newCache.lon, newCache.lat], zoom: 15, speed: 1.4 });
+          map.once("moveend", () => showPopup(newCache));
+        });
+      }
+
+      bumpChangeCount();
+      showPopup(newCache);
+    }
+
+    function showDeleteConfirm(gc) {
+      const cache = caches.find(c => c.gc === gc);
+      if (!cache) return;
+      popup
+        .setLngLat([cache.lon, cache.lat])
+        .setHTML(`
+          <div class="popup-confirm">
+            <div class="popup-confirm-text">Are you sure you want to delete <strong>${cache.cacheName}</strong>?</div>
+            <div class="popup-confirm-actions">
+              <button class="popup-confirm-no" onclick="showPopup(caches.find(c=>c.gc==='${gc}'))">Cancel</button>
+              <button class="popup-confirm-yes" onclick="deleteCache('${gc}')">Delete</button>
+            </div>
+          </div>
+        `)
+        .addTo(map);
+    }
+
+    async function deleteCache(gc) {
+      const idx = caches.findIndex(c => c.gc === gc);
+      if (idx === -1) return;
+      const cache = caches[idx];
+
+      await dbDelete(db, gc);
+      bumpChangeCount();
+
+      const id = `cache-${gc}`;
+      if (cache._mapClickHandler) map.off("click", `${id}-fill`, cache._mapClickHandler);
+      [`${id}-fill`, `${id}-outline`, `${id}-dot`, `${id}-label`].forEach(lid => {
+        if (map.getLayer(lid)) map.removeLayer(lid);
+      });
+      [id, `${id}-dot`].forEach(sid => {
+        if (map.getSource(sid)) map.removeSource(sid);
+      });
+
+      if (cache._li) cache._li.remove();
+      caches.splice(idx, 1);
+      updateCacheCount();
+      popup.remove();
+    }
+
+    const list = document.getElementById("cache-list");
+
+    function filterCaches(query) {
+      const q = query.trim().toLowerCase();
+      let anyVisible = false;
+      caches.forEach(cache => {
+        if (!cache._li) return;
+        const match = q === ""
+          || cache.cacheName.toLowerCase().includes(q)
+          || cache.gc.toLowerCase().includes(q);
+        cache._li.style.display = match ? "" : "none";
+        if (match) anyVisible = true;
+      });
+      document.getElementById("search-empty").style.display = q !== "" && !anyVisible ? "" : "none";
+    }
+
+    function addCacheToList(cache) {
+      if (cache.cacheType === "placeholder") return;
+      const li = document.createElement("li");
+      li.style.cursor = "pointer";
+      cache._li = li;
+      const dot = document.createElement("span");
+      dot.className = "cache-dot";
+      dot.style.background = cache.customColor || TYPE_COLOR[cache.cacheType];
+      const name = document.createElement("span");
+      name.className = "cache-list-name";
+      name.textContent = cache.cacheName;
+      li.appendChild(dot);
+      li.appendChild(name);
+      li.addEventListener("click", () => {
+        map.flyTo({ center: [cache.lon, cache.lat], zoom: 15, speed: 1.4 });
+        map.once("moveend", () => showPopup(cache));
+      });
+      list.appendChild(li);
+    }
+
+    const LIGHT_STYLE = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
+    const DARK_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+
+    const map = new maplibregl.Map({
+      container: "map",
+      style: LIGHT_STYLE,
+      center: CENTER,
+      zoom: 14
+    });
+
+    const mapReady = new Promise(resolve => map.once("load", resolve));
+
+    // Returns a GeoJSON Polygon circle given [lng, lat], radius in meters
+    function geoCircle(center, radiusMeters, steps = 64) {
+      const R = 6371000;
+      const lat = center[1] * Math.PI / 180;
+      const coords = [];
+      for (let i = 0; i <= steps; i++) {
+        const angle = (i / steps) * 2 * Math.PI;
+        const dLat = (radiusMeters / R) * Math.cos(angle);
+        const dLng = (radiusMeters / R) * Math.sin(angle) / Math.cos(lat);
+        coords.push([
+          center[0] + dLng * (180 / Math.PI),
+          center[1] + dLat * (180 / Math.PI)
+        ]);
+      }
+      return { type: "Feature", geometry: { type: "Polygon", coordinates: [coords] } };
+    }
+
+    const RADIUS = 161;
+
+    const popup = new maplibregl.Popup({ offset: 8, closeButton: false });
+
+    function addCacheToMap(cache) {
+      const center = [cache.lon, cache.lat];
+      const color = cache.customColor || TYPE_COLOR[cache.cacheType];
+      const id = `cache-${cache.gc}`;
+
+      map.addSource(id, { type: "geojson", data: geoCircle(center, RADIUS) });
+      map.addLayer({ id: `${id}-fill`, type: "fill", source: id, paint: { "fill-color": color, "fill-opacity": 0.35 } });
+      const outlinePaint = { "line-color": color, "line-width": 2 };
+      if (cache.cacheType === "placeholder") outlinePaint["line-dasharray"] = [4, 1];
+      map.addLayer({ id: `${id}-outline`, type: "line", source: id, paint: outlinePaint });
+
+      const dotId = `${id}-dot`;
+      map.addSource(dotId, { type: "geojson", data: { type: "Feature", geometry: { type: "Point", coordinates: center } } });
+      map.addLayer({
+        id: dotId, type: "circle", source: dotId,
+        paint: { "circle-radius": 5, "circle-color": color, "circle-stroke-width": 1, "circle-stroke-color": "#ffffff" }
+      });
+
+      if (cache.cacheType !== "placeholder") {
+        const isDark = document.body.classList.contains("dark");
+        map.addLayer({
+          id: `${id}-label`,
+          type: "symbol",
+          source: dotId,
+          layout: {
+            "text-field": cache.cacheName.length > 40 ? cache.cacheName.slice(0, 40) + '...' : cache.cacheName,
+            "text-size": 11,
+            "text-offset": [0, 0.7],
+            "text-anchor": "top",
+            "text-font": isDark ? ["Open Sans Regular", "Noto Sans Regular"] : ["Noto Sans Regular", "Open Sans Regular"]
+          },
+          paint: {
+            "text-color": isDark ? "#e5e7eb" : "#111827",
+            "text-halo-color": isDark ? "#1f2937" : "#ffffff",
+            "text-halo-width": 1.5
+          }
+        });
+      }
+
+      const handler = () => showPopup(cache);
+      cache._mapClickHandler = handler;
+      map.on("click", `${id}-fill`, handler);
+    }
+
+    function applyLightThemeOverrides() {
+      if (document.body.classList.contains("dark")) return;
+      const PARK_COLOR = "#A5D6A7";
+      const WATER_COLOR = "#B3E5FC";
+      [
+        ["landcover",           "fill-color", PARK_COLOR],
+        ["park_national_park",  "fill-color", PARK_COLOR],
+        ["park_nature_reserve", "fill-color", PARK_COLOR],
+        ["park",                "fill-color", PARK_COLOR],
+        ["landuse",             "fill-color", PARK_COLOR],
+        ["wood",                "fill-color", PARK_COLOR],
+        ["water",               "fill-color", WATER_COLOR],
+        ["water_shadow",        "fill-color", WATER_COLOR],
+      ].forEach(([id, prop, val]) => {
+        if (map.getLayer(id)) map.setPaintProperty(id, prop, val);
+      });
+      if (map.getLayer("waterway")) map.setPaintProperty("waterway", "line-color", WATER_COLOR);
+
+      const ROAD_FILL  = "#ffffff";
+      const ROAD_CASE  = "#d1d5db";
+      [
+        "road_sec_fill_noramp", "road_pri_fill_ramp", "road_pri_fill_noramp",
+        "road_trunk_fill_ramp", "road_trunk_fill_noramp",
+        "road_mot_fill_ramp",   "road_mot_fill_noramp",
+        "bridge_sec_fill", "bridge_pri_fill", "bridge_trunk_fill", "bridge_mot_fill",
+        "tunnel_sec_fill", "tunnel_pri_fill", "tunnel_trunk_fill", "tunnel_mot_fill",
+      ].forEach(id => { if (map.getLayer(id)) map.setPaintProperty(id, "line-color", ROAD_FILL); });
+      [
+        "road_pri_case_ramp",   "road_trunk_case_ramp",  "road_mot_case_ramp",
+        "road_service_case",    "road_minor_case",
+        "road_sec_case_noramp", "road_pri_case_noramp",  "road_trunk_case_noramp", "road_mot_case_noramp",
+        "bridge_sec_case",      "bridge_pri_case",        "bridge_trunk_case",      "bridge_mot_case",
+        "tunnel_sec_case",      "tunnel_pri_case",        "tunnel_trunk_case",      "tunnel_mot_case",
+      ].forEach(id => { if (map.getLayer(id)) map.setPaintProperty(id, "line-color", ROAD_CASE); });
+    }
+
+    function updateSyncWarning() {
+      const count = parseInt(localStorage.getItem("changeCount") || "0", 10);
+      const badge = document.getElementById("change-badge");
+      if (count > 3) {
+        badge.textContent = count;
+        badge.style.display = "flex";
+      } else {
+        badge.style.display = "none";
+      }
+    }
+
+    function updateCacheCount() {
+      const n = caches.filter(c => c.cacheType !== "placeholder").length;
+      document.getElementById("cache-count").textContent = n === 1 ? "1 cache" : `${n} caches`;
+    }
+
+    function bumpChangeCount() {
+      const count = parseInt(localStorage.getItem("changeCount") || "0", 10);
+      localStorage.setItem("changeCount", count + 1);
+      updateSyncWarning();
+    }
+
+    async function initApp() {
+      db = await initDB();
+      let stored = await dbGetAll(db);
+
+      if (stored.length === 0) {
+        for (const c of INITIAL_CACHES) await dbSave(db, c);
+        stored = INITIAL_CACHES;
+      }
+
+      caches = stored;
+      list.innerHTML = "";
+      caches.forEach(addCacheToList);
+      updateCacheCount();
+
+      updateSyncWarning();
+
+      await mapReady;
+      caches.forEach(addCacheToMap);
+      applyLightThemeOverrides();
+    }
+
+    initApp();
+
+    const coordPopup = new maplibregl.Popup({ offset: 8, closeButton: false });
+    let pickMode = false;
+
+    function togglePickMode() {
+      pickMode = !pickMode;
+      document.getElementById("pick-btn").classList.toggle("active", pickMode);
+      document.getElementById("pick-btn-label").textContent = pickMode ? "On" : "";
+      map.getCanvas().style.cursor = pickMode ? "crosshair" : "";
+      if (!pickMode) coordPopup.remove();
+    }
+
+    map.on("click", e => {
+      if (!pickMode) return;
+      const { lat, lng } = e.lngLat;
+      const dmm = toDMM(lat, lng);
+      coordPopup
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div class="coord-popup-inner">
+            <div class="coord-popup-value">${dmm}</div>
+            <button class="coord-copy-btn" onclick="navigator.clipboard.writeText('${dmm}')">Copy coordinates</button>
+            <button class="coord-add-btn" onclick="addPlaceholder(${lat}, ${lng})">Add placeholder</button>
+          </div>
+        `)
+        .addTo(map);
+    });
+
+    async function addPlaceholder(lat, lng) {
+      const gc = "PH" + Date.now();
+      const cache = { cacheName: "Placeholder", gc, cacheType: "placeholder", lon: lng, lat };
+      await dbSave(db, cache);
+      bumpChangeCount();
+      caches.push(cache);
+      addCacheToMap(cache);
+      coordPopup.remove();
+    }
+
+    const MOON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+    const SUN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+    if (prefersDark.matches) {
+      document.body.classList.add("dark");
+      document.getElementById("theme-btn").innerHTML = SUN_SVG;
+    }
+    prefersDark.addEventListener("change", e => {
+      const isDark = e.matches;
+      document.body.classList.toggle("dark", isDark);
+      document.getElementById("theme-btn").innerHTML = isDark ? SUN_SVG : MOON_SVG;
+      caches.forEach(cache => {
+        if (cache._mapClickHandler) {
+          map.off("click", `cache-${cache.gc}-fill`, cache._mapClickHandler);
+          delete cache._mapClickHandler;
+        }
+      });
+      map.setStyle(isDark ? DARK_STYLE : LIGHT_STYLE);
+      map.once("style.load", () => { caches.forEach(addCacheToMap); applyLightThemeOverrides(); });
+    });
+
+    function toggleTheme() {
+      const isDark = document.body.classList.toggle("dark");
+      document.getElementById("theme-btn").innerHTML = isDark ? SUN_SVG : MOON_SVG;
+      // Remove layer-click handlers before setStyle wipes the layers
+      caches.forEach(cache => {
+        if (cache._mapClickHandler) {
+          map.off("click", `cache-${cache.gc}-fill`, cache._mapClickHandler);
+          delete cache._mapClickHandler;
+        }
+      });
+      map.setStyle(isDark ? DARK_STYLE : LIGHT_STYLE);
+      map.once("style.load", () => { caches.forEach(addCacheToMap); applyLightThemeOverrides(); });
+    }
+
+    let customColor = null;
+
+    function selectCacheType(value, label) {
+      document.getElementById("f-type").value = value;
+      document.getElementById("f-type-display").textContent = label;
+      document.querySelectorAll(".type-option").forEach(el => {
+        el.classList.toggle("selected", el.dataset.value === value);
+      });
+      document.querySelector(".type-details").open = false;
+      updateTypeDot();
+    }
+
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".type-select-wrapper")) {
+        const d = document.querySelector(".type-details");
+        if (d) d.open = false;
+      }
+    });
+
+    function updateTypeDot() {
+      customColor = null;
+      const val = document.getElementById("f-type").value;
+      document.getElementById("f-type-dot").style.background = TYPE_COLOR[val] || TYPE_COLOR.mystery;
+    }
+
+    function openColorPicker() {
+      const input = document.getElementById("f-type-color-input");
+      input.value = document.getElementById("f-type-dot").style.background
+        .replace(/\s/g, "").match(/^#[0-9a-f]{6}$/i)?.[0]
+        || rgbToHex(document.getElementById("f-type-dot").style.background)
+        || "#22c55e";
+      input.click();
+    }
+
+    function rgbToHex(rgb) {
+      const m = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+      if (!m) return null;
+      return "#" + [m[1], m[2], m[3]].map(n => parseInt(n).toString(16).padStart(2, "0")).join("");
+    }
+
+    function onColorInput(hex) {
+      customColor = hex;
+      document.getElementById("f-type-dot").style.background = hex;
+    }
+
+    function openModal() {
+      document.getElementById("modal-overlay").classList.add("open");
+      updateTypeDot();
+    }
+
+    function closeModal() {
+      document.getElementById("modal-overlay").classList.remove("open");
+      document.getElementById("f-name").value = "";
+      document.getElementById("f-gc").value = "";
+      document.getElementById("f-type").value = "traditional";
+      document.getElementById("f-type-display").textContent = "Traditional";
+      document.querySelectorAll(".type-option").forEach(el => el.classList.toggle("selected", el.dataset.value === "traditional"));
+      document.querySelector(".type-details").open = false;
+      document.getElementById("f-type-dot").style.background = TYPE_COLOR.traditional;
+      document.getElementById("f-coords").value = "";
+      document.getElementById("f-coords-error").style.display = "none";
+      customColor = null;
+    }
+
+    document.getElementById("modal-save").addEventListener("click", async () => {
+      const cacheName = document.getElementById("f-name").value.trim();
+      const gc = document.getElementById("f-gc").value.trim();
+      const cacheType = document.getElementById("f-type").value;
+      const coordRaw = document.getElementById("f-coords").value.trim();
+
+      if (!cacheName || !gc || !coordRaw) return;
+
+      const coordError = document.getElementById("f-coords-error");
+      const ddParts = coordRaw.split(",").map(s => parseFloat(s.trim()));
+      let lat, lon;
+      if (ddParts.length === 2 && !ddParts.some(isNaN)) {
+        [lat, lon] = ddParts;
+      } else {
+        const dmm = fromDMM(coordRaw);
+        if (!dmm) { coordError.style.display = "block"; return; }
+        ({ lat, lon } = dmm);
+      }
+      coordError.style.display = "none";
+      const cache = { cacheName, gc, cacheType, lon, lat, ...(customColor ? { customColor } : {}) };
+
+      await dbSave(db, cache);
+      bumpChangeCount();
+      caches.push(cache);
+      addCacheToList(cache);
+      updateCacheCount();
+      addCacheToMap(cache);
+      closeModal();
+    });
+
+    document.getElementById("modal-overlay").addEventListener("click", e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    function downloadPage() {
+      localStorage.setItem("changeCount", "0");
+      updateSyncWarning();
+      const clean = caches.map(({ _li, ...rest }) => rest);
+      const indent = "      ";
+      const lines = clean.map(c => `${indent}  ${JSON.stringify(c)},`).join("\n");
+      const block = `/* BEGIN_CACHES */\n${indent}const INITIAL_CACHES = [\n${lines}\n${indent}];\n${indent}/* END_CACHES */`;
+      let html = document.documentElement.outerHTML;
+      html = html.replace(/\/\* BEGIN_CACHES \*\/[\s\S]*?\/\* END_CACHES \*\//, block);
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "index.html";
+      a.click();
+      URL.revokeObjectURL(url);
+      document.getElementById("remind-overlay").classList.add("open");
+    }
+
+  </script>
+</body>
+</html>
