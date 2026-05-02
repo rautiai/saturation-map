@@ -19,7 +19,7 @@
     #controls { position: absolute; top: 1.5rem; right: 0.75rem; z-index: 10;}
     #download-split { position: relative; display: flex; border-radius: 5rem; overflow: hidden; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
     #download-btn { position: relative; padding: 0 0.75rem; height: 2.75rem; font-size: 0.85rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 500; background: transparent; color: light-dark(#374151, #e5e7eb); border: none; border-radius: 0; cursor: pointer; transition: background 0.15s; box-shadow: none; display: flex; align-items: center; gap: 0.35rem; }
-    #change-badge { background: var(--accent); color: #fff; font-size: 0.825rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 600; min-width: 1.5rem; height: 1.5rem; border-radius: 999px; pointer-events: none; display: none; align-items: center; justify-content: center; text-align: center; padding: 0 4px; flex-shrink: 0; }
+    #change-badge { color: #fff; font-size: 0.825rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 600; min-width: 1.5rem; height: 1.5rem; border-radius: 999px; pointer-events: none; display: none; align-items: center; justify-content: center; text-align: center; padding: 0 4px; flex-shrink: 0; }
     #download-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
     #export-btn { width: 2.75rem; height: 2.75rem; padding: 0; display: flex; align-items: center; justify-content: center; border: none; border-left: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); border-radius: 0; background: transparent; color: light-dark(#374151, #e5e7eb); cursor: pointer; transition: background 0.15s; box-shadow: none; }
     #export-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
@@ -45,9 +45,9 @@
 
     #sidebar-footer {
       flex-shrink: 0;
-      display: flex;
+      display: grid;
+      grid-template-columns: 28px 1fr 28px;
       align-items: center;
-      justify-content: space-between;
       padding: 0.6rem 0.75rem 0.75rem;
     }
 
@@ -55,6 +55,7 @@
       font-size: 0.75rem;
       color: light-dark(#9ca3af, #6b7280);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
     }
 
     #theme-btn {
@@ -79,14 +80,14 @@
       gap: 0.5rem;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 0.9375rem;
-      color: light-dark(#1a1a1a, #e5e7eb);
+      color: light-dark(#1a1a1a, #CFD8DC);
       padding: 0.5rem 1rem;
       border-radius: 0.25rem;
       transition: background 0.12s;
     }
 
     #cache-list li:hover { background: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.07)); }
-    .cache-dot { width: 0.875rem; height: 0.875rem; border: 1px solid rgba(255,255,255,0.5); border-radius: 50%; flex-shrink: 0; }
+    .cache-dot { width: 0.875rem; height: 0.875rem; border: 1px solid light-dark(rgba(255,255,255,0.5), rgba(0,0,0,0.5)); border-radius: 50%; flex-shrink: 0; }
     .cache-list-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     button {
@@ -215,7 +216,7 @@
     #search-bar {
       display: flex; align-items: center; gap: 0.4rem;
       padding: 0.4rem 0.5rem;
-      background:rgba(0,0,0,0.05);
+      background:light-dark(rgba(0,0,0,0.05), rgba(255,255,255,0.05));
       border-radius: 0.625rem;
       height: 2.25rem;
       color: light-dark(#9ca3af, #6b7280);
@@ -312,6 +313,38 @@
 
     #modal-save { background: #2563eb; color: #fff; }
     #modal-save:hover { background: #1d4ed8; }
+
+    #export-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 200;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    #export-overlay.open { display: flex; }
+    #export-modal {
+      background: light-dark(#fff, #1f2937);
+      border-radius: 1.375rem; padding: 1.25rem 0.75rem 0.75rem; width: 280px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; gap: 1rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #export-modal h3 { margin: 0; font-size: 0.95rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); }
+    #export-modal p { margin: 0; font-size: 0.85rem; color: light-dark(#4b5563, #9ca3af); }
+    #export-format-btns { display: flex; gap: 0.5rem; }
+    .export-fmt-btn {
+      flex: 1; padding: 0.45rem 0; font-size: 0.85rem; font-weight: 500;
+      font-family: inherit; border: none; border-radius: 0.625rem;
+      cursor: pointer; box-shadow: none; transition: background 0.15s;
+      background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb);
+    }
+    .export-fmt-btn:hover { background: light-dark(#e5e7eb, #4b5563); }
+    #export-cancel {
+      align-self: flex-end; padding: 0.45rem 1rem; font-size: 0.85rem; font-weight: 500;
+      font-family: inherit; border: none; border-radius: 0.625rem;
+      cursor: pointer; box-shadow: none; background: transparent;
+      color: light-dark(#9ca3af, #6b7280); transition: color 0.15s;
+    }
+    #export-cancel:hover { color: light-dark(#374151, #e5e7eb); }
 
     #remind-overlay {
       display: none; position: fixed; inset: 0;
@@ -414,6 +447,76 @@
     }
 
     .coord-add-btn:hover { background: light-dark(#1f2937, #111827); }
+
+    #add-waypoint-btn {
+      display: none; margin-top: 0.4rem; width: 100%; padding: 0.35rem 0;
+      font-size: 0.82rem; font-family: inherit; font-weight: 500;
+      background: light-dark(#e5e7eb, #374151);
+      color: light-dark(#374151, #e5e7eb);
+      border: 1px dashed light-dark(#9ca3af, #4b5563); border-radius: 0.5rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    #add-waypoint-btn:hover { background: light-dark(#d1d5db, #4b5563); }
+    .extra-coord-row { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.4rem; }
+    .extra-coord-row input { flex: 1; }
+    .extra-coord-remove {
+      flex-shrink: 0; width: 1.6rem; height: 1.6rem; padding: 0;
+      font-size: 1rem; line-height: 1; background: none;
+      border: none; color: light-dark(#9ca3af, #6b7280); cursor: pointer; border-radius: 0.375rem;
+    }
+    .extra-coord-remove:hover { color: light-dark(#ef4444, #f87171); background: light-dark(#fee2e2, rgba(239,68,68,0.15)); }
+
+    #import-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 100;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    #import-overlay.open { display: flex; }
+    #import-modal {
+      background: light-dark(#fff, #1f2937);
+      border-radius: 1.375rem; padding: 0.75rem; width: 440px; max-width: calc(100vw - 2rem);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      display: flex; flex-direction: column; gap: 0.75rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #import-modal h3 { font-size: 0.95rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); margin: 0 0.25rem; }
+    #import-drop-zone {
+      border: 2px dashed light-dark(#d1d5db, #4b5563);
+      border-radius: 0.75rem; padding: 1.25rem 1rem;
+      text-align: center; cursor: default;
+      color: light-dark(#9ca3af, #6b7280); font-size: 0.85rem;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    #import-drop-zone.drag-over {
+      border-color: #2563eb;
+      background: light-dark(rgba(37,99,235,0.05), rgba(37,99,235,0.1));
+      color: light-dark(#2563eb, #60a5fa);
+    }
+    #import-drop-zone svg { margin-bottom: 0.4rem; opacity: 0.5; }
+    #import-drop-zone p { margin: 0; }
+    #import-drop-zone .import-drop-sub { font-size: 0.75rem; margin-top: 0.2rem; opacity: 0.65; }
+    #import-textarea {
+      width: 100%; height: 160px; resize: vertical;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.8rem; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      background: light-dark(#f9fafb, #374151);
+      border: 1px solid light-dark(#d1d5db, #4b5563);
+      border-radius: 0.625rem; outline: none;
+      color: light-dark(#111827, #f3f4f6); transition: border-color 0.15s;
+    }
+    #import-textarea:focus { border-color: light-dark(#2563eb, #3b82f6); }
+    #import-result {
+      font-size: 0.82rem; padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem; line-height: 1.5;
+    }
+    #import-result.success { background: light-dark(#f0fdf4, rgba(20,83,45,0.4)); color: light-dark(#166534, #86efac); }
+    #import-result.partial { background: light-dark(#fffbeb, rgba(69,26,3,0.4)); color: light-dark(#92400e, #fcd34d); }
+    #import-result.error { background: light-dark(#fef2f2, rgba(69,10,10,0.4)); color: light-dark(#b91c1c, #fca5a5); }
+    #import-cancel { background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); }
+    #import-cancel:hover { background: light-dark(#e5e7eb, #4b5563); }
+    #import-do { background: #2563eb; color: #fff; }
+    #import-do:hover { background: #1d4ed8; }
   </style>
 </head>
 <body>
@@ -429,7 +532,7 @@
   </button>
   <div id="add-cache-split">
     <button id="add-cache-btn" onclick="openModal()"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New cache</button>
-    <button id="import-btn">
+    <button id="import-btn" onclick="openImportModal()">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
         <polyline points="7 8 12 13 17 8"/>
@@ -451,6 +554,7 @@
       <p id="search-empty" style="display:none;">No matches found</p>
     </div>
     <div id="sidebar-footer">
+      <span></span>
       <span id="cache-count">0 caches</span>
       <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -489,10 +593,12 @@
         <label for="f-gc">GC Code
           <input type="text" id="f-gc" maxlength="7" placeholder="e.g. GC6511N" />
         </label>
-        <label for="f-coords"><span style="display:flex;align-items:center;gap:4px;">Coordinates<i class="coord-info-icon" data-tooltip="DD (Decimal Degrees):&#10;65.020633, 25.480867&#10;&#10;DMM (Degrees Decimal Minutes):&#10;N65° 01.238 E025° 28.852">i</i></span>
-          <input type="text" id="f-coords" placeholder="e.g. 65.020633, 25.480867" />
+        <div class="modal-field"><span style="display:flex;align-items:center;gap:4px;">Coordinates<i class="coord-info-icon" data-tooltip="DD (Decimal Degrees):&#10;65.020633, 25.480867&#10;&#10;DMM (Degrees Decimal Minutes):&#10;N65° 01.238 E025° 28.852">i</i></span>
+          <input type="text" id="f-coords" aria-label="Coordinates" placeholder="e.g. 65.020633, 25.480867" />
           <span id="f-coords-error" style="display:none;font-size:0.75rem;color:#ef4444;margin-top:-0.1rem;">Invalid coordinate format</span>
-        </label>
+          <div id="multi-extra-coords"></div>
+          <button type="button" id="add-waypoint-btn" onclick="addWaypointField()">+ Add waypoint</button>
+        </div>
       </div>
       <div class="modal-footer">
         <button id="modal-cancel" onclick="closeModal()">Cancel</button>
@@ -509,10 +615,39 @@
     </div>
   </div>
 
+  <div id="export-overlay">
+    <div id="export-modal">
+      <h3>Export Caches</h3>
+      <p>Choose a file format to download.</p>
+      <div id="export-format-btns">
+        <button class="export-fmt-btn" onclick="exportCaches('csv')">CSV</button>
+        <button class="export-fmt-btn" onclick="exportCaches('tsv')">TSV</button>
+      </div>
+      <button id="export-cancel" onclick="closeExportModal()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="import-overlay">
+    <div id="import-modal">
+      <h3>Import Caches</h3>
+      <div id="import-drop-zone">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>Drop a CSV or TSV file here</p>
+        <p class="import-drop-sub">or paste data in the field below</p>
+      </div>
+      <textarea id="import-textarea" spellcheck="false" placeholder="name,latitude,longitude,circle_radius,color&#10;My Cache,65.0134,25.4612,161,#22c55e&#10;Another Cache,65.0200,25.4700,200,#1976D2"></textarea>
+      <div id="import-result" style="display:none;"></div>
+      <div class="modal-footer">
+        <button id="import-cancel" onclick="closeImportModal()">Cancel</button>
+        <button id="import-do" onclick="runImport()">Import</button>
+      </div>
+    </div>
+  </div>
+
   <div id="controls">
     <div id="download-split">
       <button id="download-btn" onclick="downloadPage()"><div id="change-badge"></div>Download map.html</button>
-      <button id="export-btn" title="Export" onclick="downloadPage()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+      <button id="export-btn" title="Export caches" onclick="openExportModal()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
     </div>
   </div>
 
@@ -597,7 +732,7 @@
         .setLngLat([cache.lon, cache.lat])
         .setHTML(`
           <div class="popup-inner">
-            ${cache.cacheType !== "placeholder" ? `<div class="popup-gc"><a href="https://coord.info/${cache.gc}" target="_blank" rel="noopener noreferrer">${cache.gc}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>` : ""}
+            ${cache.cacheType !== "placeholder" ? `<div class="popup-gc"><a href="https://coord.info/${cache.primaryGc || cache.gc}" target="_blank" rel="noopener noreferrer">${cache.primaryGc || cache.gc}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>` : ""}
             <div class="popup-name">${cache.cacheName}</div>
             <div class="popup-coords">${toDMM(cache.lat, cache.lon)}</div>
             <div class="popup-actions">
@@ -776,9 +911,10 @@
     const LIGHT_STYLE = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
     const DARK_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
+    const _initPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const map = new maplibregl.Map({
       container: "map",
-      style: LIGHT_STYLE,
+      style: _initPrefersDark ? DARK_STYLE : LIGHT_STYLE,
       center: CENTER,
       zoom: 14
     });
@@ -811,7 +947,7 @@
       const color = cache.customColor || TYPE_COLOR[cache.cacheType];
       const id = `cache-${cache.gc}`;
 
-      map.addSource(id, { type: "geojson", data: geoCircle(center, RADIUS) });
+      map.addSource(id, { type: "geojson", data: geoCircle(center, cache.radius || RADIUS) });
       map.addLayer({ id: `${id}-fill`, type: "fill", source: id, paint: { "fill-color": color, "fill-opacity": 0.35 } });
       const outlinePaint = { "line-color": color, "line-width": 2 };
       if (cache.cacheType === "placeholder") outlinePaint["line-dasharray"] = [4, 1];
@@ -889,9 +1025,10 @@
     function updateSyncWarning() {
       const count = parseInt(localStorage.getItem("changeCount") || "0", 10);
       const badge = document.getElementById("change-badge");
-      if (count > 3) {
+      if (count > 0) {
         badge.textContent = count;
         badge.style.display = "flex";
+        badge.style.background = count < 10 ? "#3b82f6" : count < 20 ? "#f97316" : "#ef4444";
       } else {
         badge.style.display = "none";
       }
@@ -1014,6 +1151,30 @@
       });
       document.querySelector(".type-details").open = false;
       updateTypeDot();
+      const isMulti = value === "multi";
+      document.getElementById("add-waypoint-btn").style.display = isMulti ? "block" : "none";
+      if (!isMulti) document.getElementById("multi-extra-coords").innerHTML = "";
+    }
+
+    function addWaypointField() {
+      const container = document.getElementById("multi-extra-coords");
+      const row = document.createElement("div");
+      row.className = "extra-coord-row";
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "extra-coord-input";
+      input.placeholder = "e.g. 65.020633, 25.480867";
+      input.setAttribute("aria-label", "Additional waypoint coordinates");
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "extra-coord-remove";
+      removeBtn.textContent = "×";
+      removeBtn.title = "Remove waypoint";
+      removeBtn.onclick = () => row.remove();
+      row.appendChild(input);
+      row.appendChild(removeBtn);
+      container.appendChild(row);
+      input.focus();
     }
 
     document.addEventListener("click", e => {
@@ -1065,7 +1226,15 @@
       document.getElementById("f-type-dot").style.background = TYPE_COLOR.traditional;
       document.getElementById("f-coords").value = "";
       document.getElementById("f-coords-error").style.display = "none";
+      document.getElementById("multi-extra-coords").innerHTML = "";
+      document.getElementById("add-waypoint-btn").style.display = "none";
       customColor = null;
+    }
+
+    function parseCoord(raw) {
+      const ddParts = raw.split(",").map(s => parseFloat(s.trim()));
+      if (ddParts.length === 2 && !ddParts.some(isNaN)) return { lat: ddParts[0], lon: ddParts[1] };
+      return fromDMM(raw) || null;
     }
 
     document.getElementById("modal-save").addEventListener("click", async () => {
@@ -1077,30 +1246,242 @@
       if (!cacheName || !gc || !coordRaw) return;
 
       const coordError = document.getElementById("f-coords-error");
-      const ddParts = coordRaw.split(",").map(s => parseFloat(s.trim()));
-      let lat, lon;
-      if (ddParts.length === 2 && !ddParts.some(isNaN)) {
-        [lat, lon] = ddParts;
-      } else {
-        const dmm = fromDMM(coordRaw);
-        if (!dmm) { coordError.style.display = "block"; return; }
-        ({ lat, lon } = dmm);
-      }
+      const primary = parseCoord(coordRaw);
+      if (!primary) { coordError.style.display = "block"; return; }
       coordError.style.display = "none";
-      const cache = { cacheName, gc, cacheType, lon, lat, ...(customColor ? { customColor } : {}) };
 
-      await dbSave(db, cache);
+      const extraInputs = [...document.querySelectorAll(".extra-coord-input")]
+        .map(el => el.value.trim()).filter(Boolean);
+
+      const allCoords = [primary];
+      for (const raw of extraInputs) {
+        const parsed = parseCoord(raw);
+        if (!parsed) { coordError.style.display = "block"; return; }
+        allCoords.push(parsed);
+      }
+
+      const toSave = allCoords.map(({ lat, lon }, i) => {
+        const waypointGc = i === 0 ? gc : `${gc}-${i + 1}`;
+        const waypointName = i === 0 ? cacheName : `${cacheName} (${i + 1})`;
+        return {
+          cacheName: waypointName,
+          gc: waypointGc,
+          cacheType,
+          lon, lat,
+          ...(i > 0 ? { primaryGc: gc } : {}),
+          ...(customColor ? { customColor } : {})
+        };
+      });
+
+      for (const cache of toSave) {
+        await dbSave(db, cache);
+        caches.push(cache);
+        addCacheToList(cache);
+        addCacheToMap(cache);
+      }
       bumpChangeCount();
-      caches.push(cache);
-      addCacheToList(cache);
       updateCacheCount();
-      addCacheToMap(cache);
       closeModal();
     });
 
     document.getElementById("modal-overlay").addEventListener("click", e => {
       if (e.target === e.currentTarget) closeModal();
     });
+
+    function openImportModal() {
+      document.getElementById("import-overlay").classList.add("open");
+      document.getElementById("import-textarea").value = "";
+      const result = document.getElementById("import-result");
+      result.style.display = "none";
+      result.className = "";
+    }
+
+    function closeImportModal() {
+      document.getElementById("import-overlay").classList.remove("open");
+    }
+
+    document.getElementById("import-overlay").addEventListener("click", e => {
+      if (e.target === e.currentTarget) closeImportModal();
+    });
+
+    (function() {
+      const zone = document.getElementById("import-drop-zone");
+
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        zone.classList.add("drag-over");
+      });
+
+      zone.addEventListener("dragleave", e => {
+        if (!zone.contains(e.relatedTarget)) zone.classList.remove("drag-over");
+      });
+
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.classList.remove("drag-over");
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          document.getElementById("import-textarea").value = ev.target.result;
+          document.getElementById("import-result").style.display = "none";
+        };
+        reader.readAsText(file);
+      });
+    })();
+
+    function parseImportText(text) {
+      const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return { rows: [], skipped: [], error: "Need at least a header row and one data row." };
+
+      const delim = lines[0].includes("\t") ? "\t" : ",";
+      const headers = lines[0].split(delim).map(h => h.trim().toLowerCase());
+
+      const idx = {
+        name: headers.indexOf("name"),
+        lat:  headers.indexOf("latitude"),
+        lon:  headers.indexOf("longitude"),
+        rad:  headers.indexOf("circle_radius"),
+        col:  headers.indexOf("color"),
+        gc:   headers.indexOf("gc_code"),
+        type: headers.indexOf("cache_type"),
+      };
+
+      if (idx.name === -1 || idx.lat === -1 || idx.lon === -1) {
+        return { rows: [], skipped: [], error: "Missing required columns: name, latitude, longitude" };
+      }
+
+      const rows = [], skipped = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(delim).map(c => c.trim());
+        const name = cols[idx.name] || "";
+        const lat  = parseFloat(cols[idx.lat]);
+        const lon  = parseFloat(cols[idx.lon]);
+
+        if (!name || isNaN(lat) || isNaN(lon)) {
+          skipped.push(`Row ${i + 1}: invalid or missing data`);
+          continue;
+        }
+
+        const radius = idx.rad  !== -1 ? parseInt(cols[idx.rad], 10) : NaN;
+        const COLOR_ALIASES = { green: TYPE_COLOR.traditional, blue: TYPE_COLOR.mystery, orange: TYPE_COLOR.multi };
+        const rawColor = idx.col !== -1 ? (cols[idx.col] || null) : null;
+        const color    = rawColor ? (COLOR_ALIASES[rawColor.toLowerCase()] || rawColor) : null;
+        const gc       = idx.gc   !== -1 ? (cols[idx.gc]  || null) : null;
+        const rawType  = idx.type !== -1 ? (cols[idx.type] || "").toLowerCase() : "";
+        const cacheType = Object.keys(TYPE_COLOR).includes(rawType) ? rawType : "traditional";
+
+        rows.push({
+          name, lat, lon, cacheType,
+          radius: isNaN(radius) || radius <= 0 ? null : radius,
+          color: color || null,
+          gc: gc || null,
+        });
+      }
+
+      return { rows, skipped };
+    }
+
+    async function runImport() {
+      const text = document.getElementById("import-textarea").value;
+      const resultEl = document.getElementById("import-result");
+
+      if (!text.trim()) {
+        resultEl.className = "error";
+        resultEl.textContent = "Paste data or drop a file first.";
+        resultEl.style.display = "block";
+        return;
+      }
+
+      const { rows, skipped, error } = parseImportText(text);
+
+      if (error) {
+        resultEl.className = "error";
+        resultEl.textContent = error;
+        resultEl.style.display = "block";
+        return;
+      }
+
+      let imported = 0;
+      const allSkipped = [...skipped];
+
+      for (const row of rows) {
+        const gc = row.gc || "IMP" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        const cache = {
+          cacheName: row.name,
+          gc,
+          cacheType: row.cacheType,
+          lon: row.lon,
+          lat: row.lat,
+          ...(row.radius ? { radius: row.radius } : {}),
+          ...(row.color  ? { customColor: row.color }  : {}),
+        };
+        try {
+          await dbSave(db, cache);
+          bumpChangeCount();
+          caches.push(cache);
+          addCacheToList(cache);
+          addCacheToMap(cache);
+          imported++;
+        } catch (err) {
+          allSkipped.push(`"${row.name}": save failed`);
+        }
+      }
+
+      updateCacheCount();
+
+      if (imported === 0) {
+        resultEl.className = "error";
+        resultEl.textContent = "No caches imported." + (allSkipped.length ? " " + allSkipped.join("; ") : "");
+      } else if (allSkipped.length) {
+        resultEl.className = "partial";
+        resultEl.textContent = `${imported} cache${imported !== 1 ? "s" : ""} imported; ${allSkipped.length} row${allSkipped.length !== 1 ? "s" : ""} skipped.`;
+      } else {
+        resultEl.className = "success";
+        resultEl.textContent = `${imported} cache${imported !== 1 ? "s" : ""} imported successfully.`;
+      }
+      resultEl.style.display = "block";
+    }
+
+    function openExportModal() {
+      document.getElementById("export-overlay").classList.add("open");
+    }
+
+    function closeExportModal() {
+      document.getElementById("export-overlay").classList.remove("open");
+    }
+
+    document.getElementById("export-overlay").addEventListener("click", e => {
+      if (e.target === e.currentTarget) closeExportModal();
+    });
+
+    function exportCaches(format) {
+      const delim = format === "tsv" ? "\t" : ",";
+      const headers = ["name", "gc_code", "cache_type", "latitude", "longitude", "circle_radius", "color"];
+      const rows = caches
+        .filter(c => c.cacheType !== "placeholder")
+        .map(c => [
+          c.cacheName,
+          c.gc,
+          c.cacheType,
+          c.lat,
+          c.lon,
+          c.radius || RADIUS,
+          c.customColor || TYPE_COLOR[c.cacheType],
+        ]);
+
+      const content = [headers, ...rows].map(r => r.join(delim)).join("\n");
+      const mime = format === "tsv" ? "text/tab-separated-values" : "text/csv";
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `caches.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      closeExportModal();
+    }
 
     function downloadPage() {
       localStorage.setItem("changeCount", "0");
