@@ -19,7 +19,7 @@
 
     #controls { position: absolute; top: 1.5rem; right: 0.75rem; z-index: 10;}
     #download-split { position: relative; display: flex; border-radius: 5rem; overflow: hidden; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-    #download-btn { position: relative; padding: 0 0.75rem; height: 2.75rem; font-size: 0.85rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 500; background: transparent; color: light-dark(#374151, #e5e7eb); border: none; border-radius: 0; cursor: pointer; transition: background 0.15s; box-shadow: none; display: flex; align-items: center; gap: 0.35rem; }
+    #download-btn { position: relative; padding: 0 0.75rem; height: 2.75rem; font-size: 0.85rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 500; background: transparent; color: light-dark(#374151, #e5e7eb); border: none; border-radius: 0; cursor: pointer; transition: background 0.15s; box-shadow: none; display: flex; align-items: center; gap: 0.5rem; }
     #change-badge { color: #fff; font-size: 0.825rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 600; min-width: 1.5rem; height: 1.5rem; border-radius: 999px; pointer-events: none; display: none; align-items: center; justify-content: center; text-align: center; padding: 0 4px; flex-shrink: 0; }
     #download-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
     #export-btn { width: 2.75rem; height: 2.75rem; padding: 0; display: flex; align-items: center; justify-content: center; border: none; border-left: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); border-radius: 0; background: transparent; color: light-dark(#374151, #e5e7eb); cursor: pointer; transition: background 0.15s; box-shadow: none; }
@@ -130,7 +130,8 @@
 
     .maplibregl-popup-content {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: light-dark(#fff, #1f2937);
+      background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
+      backdrop-filter: blur(30px);
       padding: 0;
       border-radius: 1.25rem;
       box-shadow: 0 4px 16px rgba(0,0,0,0.2);
@@ -140,15 +141,15 @@
 
     .maplibregl-popup-close-button { box-shadow: none; font-size: 1.1rem; padding: 0.4rem 0.7rem; color: #6b7280;}
     .maplibregl-popup-close-button:hover { background: none; color: #111;}
-    
+
     .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
     .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
-    .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { border-top-color: light-dark(#fff, #1f2937); }
+    .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { border-top-color: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72)); }
     .maplibregl-popup-anchor-top .maplibregl-popup-tip,
     .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
-    .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { border-bottom-color: light-dark(#fff, #1f2937); }
-    .maplibregl-popup-anchor-left .maplibregl-popup-tip  { border-right-color: light-dark(#fff, #1f2937); }
-    .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color:  light-dark(#fff, #1f2937); }
+    .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { border-bottom-color: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72)); }
+    .maplibregl-popup-anchor-left .maplibregl-popup-tip  { border-right-color: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72)); }
+    .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color:  light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72)); }
 
     .popup-inner { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
 
@@ -272,7 +273,9 @@
     #modal-overlay.open { display: flex; }
 
     #modal {
-      background: light-dark(#fff, #1f2937);
+      background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
+      backdrop-filter: blur(30px);
+      border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08));
       border-radius: 1.375rem; padding: 0.75rem; width: 300px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       display: flex; flex-direction: column; gap: 1rem;
@@ -342,7 +345,9 @@
     }
     #export-overlay.open { display: flex; }
     #export-modal {
-      background: light-dark(#fff, #1f2937);
+      background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
+      backdrop-filter: blur(30px);
+      border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08));
       border-radius: 1.375rem; padding: 1.25rem 0.75rem 0.75rem; width: 280px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       display: flex; flex-direction: column; gap: 1rem;
@@ -374,7 +379,9 @@
     }
     #remind-overlay.open { display: flex; }
     #remind-modal {
-      background: light-dark(#fff, #1f2937);
+      background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
+      backdrop-filter: blur(30px);
+      border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08));
       border-radius: 1.375rem; padding: 1.25rem 0.75rem 0.75rem; width: 300px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       display: flex; flex-direction: column; gap: 1rem;
@@ -494,7 +501,9 @@
     }
     #import-overlay.open { display: flex; }
     #import-modal {
-      background: light-dark(#fff, #1f2937);
+      background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
+      backdrop-filter: blur(30px);
+      border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08));
       border-radius: 1.375rem; padding: 0.75rem; width: 440px; max-width: calc(100vw - 2rem);
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       display: flex; flex-direction: column; gap: 0.75rem;
@@ -630,7 +639,8 @@
   <div id="remind-overlay">
     <div id="remind-modal">
       <h3>Replace the old file</h3>
-      <p>Up-to-date <strong>map.html</strong> has been downloaded. To avoid confusion, <strong>delete this old file</strong> and open the new one instead.</p>
+      <p>Updated <strong>map.html</strong> has been downloaded.</p>
+      <p>To avoid confusion, <strong>delete this old file</strong> and open the new one instead.</p>
       <button id="remind-ok" onclick="document.getElementById('remind-overlay').classList.remove('open')">Got it</button>
     </div>
   </div>
@@ -640,8 +650,8 @@
       <h3>Export Caches</h3>
       <p>Choose a file format to download.</p>
       <div id="export-format-btns">
-        <button class="export-fmt-btn" onclick="exportCaches('csv')">CSV</button>
-        <button class="export-fmt-btn" onclick="exportCaches('tsv')">TSV</button>
+        <button class="export-fmt-btn" onclick="exportCaches('csv')">.CSV</button>
+        <button class="export-fmt-btn" onclick="exportCaches('tsv')">.TSV</button>
       </div>
       <button id="export-cancel" onclick="closeExportModal()">Cancel</button>
     </div>
@@ -931,12 +941,13 @@
     const LIGHT_STYLE = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
     const DARK_STYLE = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
-    const _initPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const _initPrefersDark = true;
     const map = new maplibregl.Map({
       container: "map",
-      style: _initPrefersDark ? DARK_STYLE : LIGHT_STYLE,
+      style: DARK_STYLE,
       center: CENTER,
-      zoom: 14
+      zoom: 14,
+      pitch: 60,
     });
 
     const mapReady = new Promise(resolve => map.once("load", resolve));
@@ -1084,24 +1095,48 @@
       await mapReady;
       caches.forEach(addCacheToMap);
       applyLightThemeOverrides();
+      setupPickPreview();
     }
 
     initApp();
 
     const coordPopup = new maplibregl.Popup({ offset: 8, closeButton: false });
     let pickMode = false;
+    let pickPreviewCoords = null;
+
+    function setupPickPreview() {
+      map.addSource("pick-preview", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({
+        id: "pick-preview-dot", type: "circle", source: "pick-preview",
+        paint: { "circle-radius": 5, "circle-color": "#6b7280", "circle-stroke-width": 1, "circle-stroke-color": "#ffffff" }
+      });
+      if (pickPreviewCoords) {
+        map.getSource("pick-preview").setData({ type: "Feature", geometry: { type: "Point", coordinates: pickPreviewCoords } });
+      }
+    }
+
+    function clearPickPreview() {
+      pickPreviewCoords = null;
+      if (map.getSource("pick-preview")) {
+        map.getSource("pick-preview").setData({ type: "FeatureCollection", features: [] });
+      }
+    }
 
     function togglePickMode() {
       pickMode = !pickMode;
       document.getElementById("pick-btn").classList.toggle("active", pickMode);
       document.getElementById("pick-btn-label").textContent = pickMode ? "On" : "";
       map.getCanvas().style.cursor = pickMode ? "crosshair" : "";
-      if (!pickMode) coordPopup.remove();
+      if (!pickMode) { coordPopup.remove(); clearPickPreview(); }
     }
 
     map.on("click", e => {
       if (!pickMode) return;
       const { lat, lng } = e.lngLat;
+      pickPreviewCoords = [lng, lat];
+      if (map.getSource("pick-preview")) {
+        map.getSource("pick-preview").setData({ type: "Feature", geometry: { type: "Point", coordinates: pickPreviewCoords } });
+      }
       const dmm = toDMM(lat, lng);
       coordPopup
         .setLngLat(e.lngLat)
@@ -1123,29 +1158,14 @@
       caches.push(cache);
       addCacheToMap(cache);
       coordPopup.remove();
+      clearPickPreview();
     }
 
     const MOON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
     const SUN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
 
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-    if (prefersDark.matches) {
-      document.body.classList.add("dark");
-      document.getElementById("theme-btn").innerHTML = SUN_SVG;
-    }
-    prefersDark.addEventListener("change", e => {
-      const isDark = e.matches;
-      document.body.classList.toggle("dark", isDark);
-      document.getElementById("theme-btn").innerHTML = isDark ? SUN_SVG : MOON_SVG;
-      caches.forEach(cache => {
-        if (cache._mapClickHandler) {
-          map.off("click", `cache-${cache.gc}-fill`, cache._mapClickHandler);
-          delete cache._mapClickHandler;
-        }
-      });
-      map.setStyle(isDark ? DARK_STYLE : LIGHT_STYLE);
-      map.once("style.load", () => { caches.forEach(addCacheToMap); applyLightThemeOverrides(); });
-    });
+    document.body.classList.add("dark");
+    document.getElementById("theme-btn").innerHTML = SUN_SVG;
 
     function toggleTheme() {
       const isDark = document.body.classList.toggle("dark");
@@ -1158,7 +1178,7 @@
         }
       });
       map.setStyle(isDark ? DARK_STYLE : LIGHT_STYLE);
-      map.once("style.load", () => { caches.forEach(addCacheToMap); applyLightThemeOverrides(); });
+      map.once("style.load", () => { caches.forEach(addCacheToMap); applyLightThemeOverrides(); setupPickPreview(); });
     }
 
     let customColor = null;
