@@ -133,10 +133,10 @@
       background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
       backdrop-filter: blur(30px);
       padding: 0;
-      border-radius: 1.25rem;
+      border-radius: 1.375rem;
       box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      min-width: 230px;
-      overflow: hidden;
+      width: 250px;
+      overflow: visible;
     }
 
     .maplibregl-popup-close-button { box-shadow: none; font-size: 1.1rem; padding: 0.4rem 0.7rem; color: #6b7280;}
@@ -152,6 +152,7 @@
     .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color:  light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72)); }
 
     .popup-inner { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
+    .popup-inner input { height: 44px;}
 
     .popup-gc { font-size: 0.875rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
     .popup-gc a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3em; transition: color 0.15s; }
@@ -166,7 +167,7 @@
     .popup-btn {
       flex: 1; padding: 0.5rem 0;
       font-size: 0.85rem; font-family: inherit; font-weight: 500;
-      border: none; border-radius: 0.5rem; cursor: pointer; transition: background 0.15s;
+      border: none; border-radius: 0.625rem; cursor: pointer; transition: background 0.15s;
       box-shadow: none;
     }
 
@@ -189,19 +190,18 @@
 
     .move-marker {
       width: 2rem; height: 2rem;
-      background: light-dark(rgba(255,255,255,0.92), rgba(17,24,39,0.92));
-      border: 2px dashed #2563eb; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.8); border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      cursor: grab; color: #2563eb;
+      cursor: grab; color: #fff;
     }
     .move-marker:active { cursor: grabbing; }
 
     .popup-confirm { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
     .popup-confirm-text { font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: light-dark(#374151, #d1d5db); }
     .popup-confirm-actions { display: flex; gap: 0.5rem; }
-    .popup-confirm-yes { flex: 1; padding: 0.5rem 0; font-size: 0.85rem; font-family: inherit; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; box-shadow: none; background: #FF5252; color: #fff; transition: background 0.15s; }
+    .popup-confirm-yes { flex: 1; padding: 0.5rem 0; font-size: 0.85rem; font-family: inherit; font-weight: 500; border: none; border-radius: 0.625rem; cursor: pointer; box-shadow: none; background: #FF5252; color: #fff; transition: background 0.15s; }
     .popup-confirm-yes:hover { background: #D32F2F; }
-    .popup-confirm-no { flex: 1; padding: 0.5rem 0; font-size: 0.85rem; font-family: inherit; font-weight: 500; border: none; border-radius: 6px; cursor: pointer; box-shadow: none; background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); transition: background 0.15s; }
+    .popup-confirm-no { flex: 1; padding: 0.5rem 0; font-size: 0.85rem; font-family: inherit; font-weight: 500; border: none; border-radius: 0.625rem; cursor: pointer; box-shadow: none; background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); transition: background 0.15s; }
     .popup-confirm-no:hover { background: light-dark(#e5e7eb, #4b5563); }
 
     .popup-save-edit { background: #2563eb; color: #fff; }
@@ -216,20 +216,34 @@
       display: flex; flex-direction: column; gap: 0.2rem;
       font-size: 0.72rem; font-weight: 600;
       color: light-dark(#6b7280, #9ca3af);
-      text-transform: uppercase; letter-spacing: 0.04em;
+      letter-spacing: 0.04em;
     }
 
     .popup-edit-fields input {
       padding: 0.35rem 0.5rem;
+      height: 2.75rem;
       font-size: 0.88rem; font-family: inherit;
       background: light-dark(#fff, #374151);
       border: 1px solid light-dark(#d1d5db, #4b5563);
       border-radius: 6px; outline: none;
       color: light-dark(#111827, #f3f4f6);
       transition: border-color 0.15s;
+      text-transform: none; letter-spacing: normal;
     }
 
     .popup-edit-fields input:focus { border-color: light-dark(#2563eb, #3b82f6); }
+
+    .popup-edit-fields .type-select-wrapper { text-transform: none; letter-spacing: normal; font-weight: normal; }
+
+    .edit-type-row { display: flex; border: 1px solid light-dark(#d1d5db, #4b5563); border-radius: 0.625rem; background: light-dark(#fff, #374151); overflow: hidden; height: 2.75rem; }
+    .edit-color-btn { width: 2.25rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: none; border-right: 1px solid light-dark(#d1d5db, #4b5563); border-radius: 0.625rem 0 0 0.625rem; background: transparent; cursor: pointer; padding: 0; box-shadow: none; transition: background 0.15s; }
+    .edit-color-btn:hover { background: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.06)); }
+    .edit-type-details { flex: 1; display: flex; flex-direction: column; position: relative; }
+    .edit-type-details summary { flex: 1; list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 0 0.6rem 0 0.75rem; cursor: pointer; font-size: 0.9rem; font-family: inherit; font-weight: 400; color: light-dark(#111827, #f3f4f6); user-select: none; overflow: hidden; }
+    .edit-type-details summary::-webkit-details-marker, .edit-type-details summary::marker { display: none; }
+    #edit-type-display { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .edit-type-details[open] .type-chevron { transform: rotate(180deg); }
+    .edit-type-details .type-options { position: absolute; top: 100%; left: -1px; right: -1px; z-index: 300; background: light-dark(#fff, #374151); border: 1px solid light-dark(#d1d5db, #4b5563); border-top: none; border-radius: 0 0 0.625rem 0.625rem; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,0.14); }
 
     #add-cache-btn {
       flex: 1; padding: 0 0.9rem; height: 2.75rem; display: flex; align-items: center; gap: 0.4rem;
@@ -386,6 +400,17 @@
       color: light-dark(#9ca3af, #6b7280); transition: color 0.15s;
     }
     #export-cancel:hover { color: light-dark(#374151, #e5e7eb); }
+    #export-types { display: flex; flex-direction: column; }
+    .export-type-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.875rem; border-bottom: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); font-family: inherit; cursor: pointer; user-select: none; height: 2.25rem; padding: 0.75rem; transition: background 0.1s, color 0.1s; color: light-dark(#9ca3af, #6b7280); }
+    .export-type-item:first-of-type { border-radius: 0.625rem 0.625rem 0 0; }
+    #export-types .export-type-item:has(input:checked):not(:has(~ .export-type-item:has(input:checked))) { background: red; }
+    .export-type-item:last-child:has(input:checked) { border: none; }
+    .export-type-item:last-of-type { border: none; }
+    .export-type-item input[type="checkbox"] { display: none; }
+    .export-type-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; opacity: 0.35; transition: opacity 0.1s; }
+    .export-type-item:has(input:checked) { background: light-dark(#f3f4f6, #1f2937); color: light-dark(#111827, #f3f4f6); }
+    .export-type-item:has(input:checked) .export-type-dot { opacity: 1; }
+    .export-type-item:hover { background: light-dark(rgba(0,0,0,0.04), rgba(255,255,255,0.05)); }
 
     #remind-overlay {
       display: none; position: fixed; inset: 0;
@@ -476,6 +501,7 @@
 
     #pick-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
     #pick-btn.active { background: #2563eb; color: #fff; width: auto; }
+    #pick-btn svg { flex-shrink: 0; }
     #pick-btn-label:not(:empty) { margin-left: 0.35rem; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; }
 
     .coord-popup-inner {
@@ -584,13 +610,7 @@
 <body>
   <div id="map"></div>
   <button id="pick-btn" data-tooltip="Pick coordinates" onclick="togglePickMode()">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/>
-      <line x1="12" y1="2" x2="12" y2="6"/>
-      <line x1="12" y1="18" x2="12" y2="22"/>
-      <line x1="2" y1="12" x2="6" y2="12"/>
-      <line x1="18" y1="12" x2="22" y2="12"/>
-    </svg><span id="pick-btn-label"></span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 5V3"/><path d="M19 12L21 12"/><path d="M12 21L12 19"/><path d="M3 12H5"/></svg><span id="pick-btn-label"></span>
   </button>
   <div id="add-cache-split">
     <button id="add-cache-btn" onclick="openModal()"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New cache</button>
@@ -608,7 +628,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input id="search-input" type="text" placeholder="Cache name or GC" aria-label="Search caches" oninput="filterCaches(this.value)" />
+        <input id="search-input" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" placeholder="Cache name or GC" aria-label="Search caches" oninput="filterCaches(this.value)" />
       </div>
     </div>
     <div id="sidebar-main">
@@ -638,13 +658,13 @@
               <input type="hidden" id="f-type" value="traditional">
               <details class="type-details">
                 <summary>
-                  <span id="f-type-display">Traditional</span>
+                  <span id="f-type-display">Traditional Cache</span>
                   <svg class="type-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </summary>
                 <div class="type-options">
-                  <div class="type-option selected" data-value="traditional" onclick="selectCacheType('traditional','Traditional')">Traditional</div>
-                  <div class="type-option" data-value="multi" onclick="selectCacheType('multi','Multi')">Multi</div>
-                  <div class="type-option" data-value="mystery" onclick="selectCacheType('mystery','Mystery/Wherigo/Letterbox')">Mystery/Wherigo/Letterbox</div>
+                  <div class="type-option selected" data-value="traditional" onclick="selectCacheType('traditional','Traditional Cache')">Traditional Cache</div>
+                  <div class="type-option" data-value="multi" onclick="selectCacheType('multi','Multi-Cache')">Multi-Cache</div>
+                  <div class="type-option" data-value="mystery" onclick="selectCacheType('mystery','Mystery Cache')">Mystery Cache</div>
                 </div>
               </details>
             </div>
@@ -682,12 +702,18 @@
   <div id="export-overlay">
     <div id="export-modal">
       <h3>Export Caches</h3>
+      <p>Choose cache types you want to export.</p>
+      <div id="export-types">
+        <label class="export-type-item"><input type="checkbox" id="exp-traditional" aria-label="Traditional" checked><span class="export-type-dot" style="background:#22c55e"></span>Traditional Cache</label>
+        <label class="export-type-item"><input type="checkbox" id="exp-multi" aria-label="Multi" checked><span class="export-type-dot" style="background:#FB8C00"></span>Multi-Cache</label>
+        <label class="export-type-item"><input type="checkbox" id="exp-mystery" aria-label="Mystery / Wherigo / Letterbox" checked><span class="export-type-dot" style="background:#1976D2"></span>Mystery Cache</label>
+        <label class="export-type-item"><input type="checkbox" id="exp-placeholder" aria-label="Placeholder"><span class="export-type-dot" style="background:#6b7280"></span>Placeholder</label>
+      </div>
       <p>Choose a file format to download.</p>
       <div id="export-format-btns">
         <button class="export-fmt-btn" onclick="exportCaches('csv')">.CSV</button>
         <button class="export-fmt-btn" onclick="exportCaches('tsv')">.TSV</button>
       </div>
-      <button id="export-cancel" onclick="closeExportModal()">Cancel</button>
     </div>
   </div>
 
@@ -800,8 +826,8 @@
             <div class="popup-name">${cache.cacheName}</div>
             <div class="popup-coords">${toDMM(cache.lat, cache.lon)}</div>
             <div class="popup-actions">
-              <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg></button>
-              <button class="popup-btn popup-move" onclick="enterMoveMode('${cache.gc}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg>Move</button>
+              <button class="popup-btn popup-edit" onclick="enterMoveMode('${cache.gc}')" title="Move"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg></button>
+              <button class="popup-btn popup-move" onclick="showPopupEditMode('${cache.gc}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg>Edit</button>
               <button class="popup-btn popup-delete" onclick="showDeleteConfirm('${cache.gc}')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11V17"/><path d="M14 11V17"/><path d="M4 7H20"/><path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z"/><path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"/></svg></button>
             </div>
           </div>
@@ -812,34 +838,161 @@
     function showPopupEditMode(gc) {
       const cache = caches.find(c => c.gc === gc);
       if (!cache) return;
-      popup
-        .setLngLat([cache.lon, cache.lat])
-        .setHTML(`
-          <div class="popup-inner">
-            <div class="popup-edit-fields">
-              ${cache.cacheType !== "placeholder" ? `
-              <label for="edit-gc">GC Code
-                <input id="edit-gc" value="${cache.gc}" />
-              </label>
-              <label for="edit-name">Cache Name
-                <input id="edit-name" value="${cache.cacheName}" />
-              </label>` : ""}
-              <label for="edit-coords">Coordinates
-                <input id="edit-coords" value="${toDMM(cache.lat, cache.lon)}" />
-              </label>
-            </div>
-            <div class="popup-actions">
-              <button class="popup-btn popup-cancel-edit" onclick="cancelEdit('${cache.gc}')">Cancel</button>
-              <button class="popup-btn popup-save-edit" onclick="saveEdit('${cache.gc}')">Save</button>
-            </div>
-          </div>
-        `)
-        .addTo(map);
+      editCustomColor = cache.customColor || null;
+      const dotColor = cache.customColor || TYPE_COLOR[cache.cacheType];
+      const TYPE_LABELS = { traditional: "Traditional Cache", multi: "Multi-Cache", mystery: "Mystery Cache", placeholder: "Placeholder" };
+      const typeLabel = TYPE_LABELS[cache.cacheType] || "Traditional Cache";
+
+      const el = document.createElement("div");
+      el.className = "popup-inner";
+
+      const fields = document.createElement("div");
+      fields.className = "popup-edit-fields";
+
+      // --- Cache Type row ---
+      const typeLabel_ = document.createElement("label");
+      typeLabel_.textContent = "Cache Type";
+
+      const typeWrapper = document.createElement("div");
+      typeWrapper.className = "type-select-wrapper";
+      const typeGroup = document.createElement("div");
+      typeGroup.className = "type-color-group";
+
+      const colorBtn = document.createElement("button");
+      colorBtn.type = "button";
+      colorBtn.className = "edit-color-btn";
+      colorBtn.title = "Pick custom color";
+      colorBtn.setAttribute("aria-label", "Pick custom color");
+      colorBtn.addEventListener("click", openEditColorPicker);
+      const dot = document.createElement("span");
+      dot.id = "edit-type-dot";
+      dot.style.cssText = `width:1.1rem;height:1.1rem;border-radius:50%;display:block;background:${dotColor};box-shadow:0 0 0 1.5px rgba(0,0,0,0.12);pointer-events:none;`;
+      colorBtn.appendChild(dot);
+
+      const colorInput = document.createElement("input");
+      colorInput.type = "color";
+      colorInput.id = "edit-type-color-input";
+      colorInput.tabIndex = -1;
+      colorInput.setAttribute("aria-hidden", "true");
+      colorInput.style.cssText = "position:absolute;opacity:0;pointer-events:none;width:0;height:0;";
+      colorInput.addEventListener("input", e => onEditColorInput(e.target.value));
+      colorInput.addEventListener("change", e => onEditColorInput(e.target.value));
+
+      const typeHidden = document.createElement("input");
+      typeHidden.type = "hidden";
+      typeHidden.id = "edit-type";
+      typeHidden.value = cache.cacheType;
+
+      const details = document.createElement("details");
+      details.className = "edit-type-details";
+
+      const summary = document.createElement("summary");
+      summary.setAttribute("aria-label", "Select cache type");
+      const typeDisplay = document.createElement("span");
+      typeDisplay.id = "edit-type-display";
+      typeDisplay.textContent = typeLabel;
+      const chevronSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      chevronSvg.setAttribute("class", "type-chevron");
+      chevronSvg.setAttribute("width", "12"); chevronSvg.setAttribute("height", "12");
+      chevronSvg.setAttribute("viewBox", "0 0 24 24"); chevronSvg.setAttribute("fill", "none");
+      chevronSvg.setAttribute("stroke", "currentColor"); chevronSvg.setAttribute("stroke-width", "2.5");
+      chevronSvg.setAttribute("stroke-linecap", "round"); chevronSvg.setAttribute("stroke-linejoin", "round");
+      const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      polyline.setAttribute("points", "6 9 12 15 18 9");
+      chevronSvg.appendChild(polyline);
+      summary.append(typeDisplay, chevronSvg);
+
+      const opts = document.createElement("div");
+      opts.className = "type-options";
+      const typeChoices = [
+        ["traditional", "Traditional Cache"],
+        ["multi", "Multi-Cache"],
+        ["mystery", "Mystery Cache"],
+        ...(cache.cacheType === "placeholder" ? [["placeholder", "Placeholder"]] : [])
+      ];
+      typeChoices.forEach(([val, label]) => {
+        const opt = document.createElement("div");
+        opt.className = "type-option" + (cache.cacheType === val ? " selected" : "");
+        opt.dataset.value = val;
+        opt.textContent = label;
+        opt.addEventListener("click", () => selectEditCacheType(val, label));
+        opts.appendChild(opt);
+      });
+
+      details.append(summary, opts);
+      typeGroup.append(colorBtn, colorInput, typeHidden, details);
+      typeWrapper.appendChild(typeGroup);
+      typeLabel_.appendChild(typeWrapper);
+
+      // --- Other fields ---
+      function makeField(labelText, id, value) {
+        const lbl = document.createElement("label");
+        lbl.setAttribute("for", id);
+        lbl.textContent = labelText;
+        const inp = document.createElement("input");
+        inp.id = id; inp.value = value;
+        lbl.appendChild(inp);
+        return lbl;
+      }
+
+      fields.append(
+        typeLabel_,
+        makeField("Cache Name", "edit-name", cache.cacheName),
+        makeField("GC Code", "edit-gc", cache.gc),
+        makeField("Coordinates", "edit-coords", toDMM(cache.lat, cache.lon))
+      );
+
+      // --- Actions ---
+      const actions = document.createElement("div");
+      actions.className = "popup-actions";
+      const cancelBtn = document.createElement("button");
+      cancelBtn.className = "popup-btn popup-cancel-edit";
+      cancelBtn.textContent = "Cancel";
+      cancelBtn.addEventListener("click", () => cancelEdit(cache.gc));
+      const saveBtn = document.createElement("button");
+      saveBtn.className = "popup-btn popup-save-edit";
+      saveBtn.textContent = "Save";
+      saveBtn.addEventListener("click", () => saveEdit(cache.gc));
+      actions.append(cancelBtn, saveBtn);
+
+      el.append(fields, actions);
+      popup.setLngLat([cache.lon, cache.lat]).setDOMContent(el).addTo(map);
     }
 
     function cancelEdit(gc) {
       const cache = caches.find(c => c.gc === gc);
       if (cache) showPopup(cache);
+    }
+
+    let editCustomColor = null;
+
+    function selectEditCacheType(value, label) {
+      document.getElementById("edit-type").value = value;
+      document.getElementById("edit-type-display").textContent = label;
+      document.querySelectorAll(".edit-type-details .type-option").forEach(el => {
+        el.classList.toggle("selected", el.dataset.value === value);
+      });
+      const d = document.querySelector(".edit-type-details");
+      if (d) d.open = false;
+      editCustomColor = null;
+      const dot = document.getElementById("edit-type-dot");
+      if (dot) dot.style.background = TYPE_COLOR[value] || TYPE_COLOR.mystery;
+    }
+
+    function openEditColorPicker() {
+      const input = document.getElementById("edit-type-color-input");
+      const dot = document.getElementById("edit-type-dot");
+      if (!input || !dot) return;
+      input.value = dot.style.background.match(/^#[0-9a-f]{6}$/i)?.[0]
+        || rgbToHex(dot.style.background)
+        || "#22c55e";
+      input.click();
+    }
+
+    function onEditColorInput(hex) {
+      editCustomColor = hex;
+      const dot = document.getElementById("edit-type-dot");
+      if (dot) dot.style.background = hex;
     }
 
     let _activeMoveMarker = null;
@@ -852,8 +1005,11 @@
       const origLon = cache.lon;
       const origLat = cache.lat;
 
+      const color = cache.customColor || TYPE_COLOR[cache.cacheType];
       const el = document.createElement('div');
       el.className = 'move-marker';
+      el.style.background = color;
+      el.style.borderColor = `rgba(255,255,255,0.8)`;
       el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg>';
 
       _activeMoveMarker = new maplibregl.Marker({ element: el, draggable: true })
@@ -914,8 +1070,10 @@
       const oldCache = caches[idx];
       const gcEl = document.getElementById("edit-gc");
       const nameEl = document.getElementById("edit-name");
+      const typeEl = document.getElementById("edit-type");
       const newGc = gcEl ? gcEl.value.trim() : oldCache.gc;
       const cacheName = nameEl ? nameEl.value.trim() : oldCache.cacheName;
+      const cacheType = typeEl ? typeEl.value : oldCache.cacheType;
       const coordRaw = document.getElementById("edit-coords").value.trim();
 
       if (!newGc || !cacheName || !coordRaw) return;
@@ -923,25 +1081,28 @@
       if (!parsed) return;
 
       const { lat, lon } = parsed;
-      const newCache = { cacheName, gc: newGc, cacheType: oldCache.cacheType, lon, lat };
+      const newCache = { cacheName, gc: newGc, cacheType, lon, lat, ...(editCustomColor ? { customColor: editCustomColor } : {}) };
+      const color = newCache.customColor || TYPE_COLOR[newCache.cacheType];
 
       if (newGc !== oldGc) {
         // Key changed: delete old IDB record and map layers, add new ones
         await dbDelete(db, oldGc);
         const oldId = `cache-${oldGc}`;
         if (oldCache._mapClickHandler) map.off("click", `${oldId}-fill`, oldCache._mapClickHandler);
-        [`${oldId}-fill`, `${oldId}-outline`, `${oldId}-dot`].forEach(lid => { if (map.getLayer(lid)) map.removeLayer(lid); });
+        [`${oldId}-fill`, `${oldId}-outline`, `${oldId}-dot`, `${oldId}-label`].forEach(lid => { if (map.getLayer(lid)) map.removeLayer(lid); });
         [oldId, `${oldId}-dot`].forEach(sid => { if (map.getSource(sid)) map.removeSource(sid); });
         await dbSave(db, newCache);
         caches[idx] = newCache;
         addCacheToMap(newCache);
       } else {
-        // Same key: update in place
+        // Same key: remove and re-add layers to apply any type/color changes
+        const id = `cache-${newGc}`;
+        if (oldCache._mapClickHandler) map.off("click", `${id}-fill`, oldCache._mapClickHandler);
+        [`${id}-fill`, `${id}-outline`, `${id}-dot`, `${id}-label`].forEach(lid => { if (map.getLayer(lid)) map.removeLayer(lid); });
+        [id, `${id}-dot`].forEach(sid => { if (map.getSource(sid)) map.removeSource(sid); });
         await dbSave(db, newCache);
         caches[idx] = newCache;
-        const id = `cache-${newGc}`;
-        map.getSource(id).setData(geoCircle([lon, lat], RADIUS));
-        map.getSource(`${id}-dot`).setData({ type: "Feature", geometry: { type: "Point", coordinates: [lon, lat] } });
+        addCacheToMap(newCache);
       }
 
       // Update sidebar li in place, re-wire click listener
@@ -1072,7 +1233,7 @@
 
     const RADIUS = 161;
 
-    const popup = new maplibregl.Popup({ offset: 8, closeButton: false });
+    const popup = new maplibregl.Popup({ offset: 10, closeButton: false });
 
     function addCacheToMap(cache) {
       const center = [cache.lon, cache.lat];
@@ -1350,6 +1511,8 @@
       if (!e.target.closest(".type-select-wrapper")) {
         const d = document.querySelector(".type-details");
         if (d) d.open = false;
+        const d2 = document.querySelector(".edit-type-details");
+        if (d2) d2.open = false;
       }
     });
 
@@ -1626,10 +1789,12 @@
     });
 
     function exportCaches(format) {
+      const selectedTypes = ["traditional", "multi", "mystery", "placeholder"]
+        .filter(t => document.getElementById(`exp-${t}`)?.checked);
       const delim = format === "tsv" ? "\t" : ",";
       const headers = ["name", "gc_code", "cache_type", "latitude", "longitude", "circle_radius", "color"];
       const rows = caches
-        .filter(c => c.cacheType !== "placeholder")
+        .filter(c => selectedTypes.includes(c.cacheType))
         .map(c => [
           c.cacheName,
           c.gc,
