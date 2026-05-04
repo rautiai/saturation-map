@@ -13,7 +13,7 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html, body { width: 100%; height: 100%; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
 
     #map { position: absolute; inset: 0; }
 
@@ -24,6 +24,16 @@
     #download-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
     #export-btn { width: 2.75rem; height: 2.75rem; padding: 0; display: flex; align-items: center; justify-content: center; border: none; border-left: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); border-radius: 0 5rem 5rem 0; background: transparent; color: light-dark(#374151, #e5e7eb); cursor: pointer; transition: background 0.15s; box-shadow: none; }
     #export-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
+
+    #map-view-controls { position: absolute; left: calc(210px + 1.75rem); bottom: 2rem; z-index: 10; display: flex; flex-direction: column; gap: 0.5rem; }
+    .map-ctrl-btn { width: 2.75rem; height: 2.75rem; padding: 0; border-radius: 50%; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); color: light-dark(#374151, #e5e7eb); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, opacity 0.2s; }
+    .map-ctrl-btn:hover { background: light-dark(rgba(255,255,255,0.8), rgba(17,24,39,0.8)); }
+    #zoom-controls { display: flex; flex-direction: column; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); border-radius: 5rem; overflow: hidden; }
+    .zoom-btn { width: 2.75rem; height: 2.75rem; padding: 0; background: transparent; border: none; border-radius: 0; box-shadow: none; color: light-dark(#374151, #e5e7eb); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .zoom-btn:hover { background: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.08)); }
+    #zoom-divider { height: 1px; background: light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); flex-shrink: 0; }
+
+    #tilt-btn.is-3d { color: #2563eb; }
 
     #sidebar {
       position: absolute;
@@ -57,8 +67,8 @@
 
     #sidebar-footer {
       flex-shrink: 0;
-      display: grid;
-      grid-template-columns: 28px 1fr 28px;
+      display: flex;
+      justify-content: center;
       align-items: center;
       padding: 0.75rem;
       position: relative;
@@ -78,17 +88,6 @@
       text-align: center;
     }
 
-    #theme-btn {
-      width: 28px; height: 28px; padding: 0;
-      border-radius: 0.5rem;
-      background: none;
-      color: light-dark(#374151, #e5e7eb);
-      border: none; box-shadow: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-
-    #theme-btn:hover { background: light-dark(#e5e7eb, #4b5563); }
 
     
     #cache-list { list-style: none; display: flex; flex-direction: column; }
@@ -157,6 +156,7 @@
     .popup-gc { font-size: 0.875rem; font-weight: 500; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
     .popup-gc a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3em; transition: color 0.15s; }
     .popup-gc a:hover { color: light-dark(#374151, #d1d5db); }
+    .popup-gc-none { font-style: italic; font-weight: 400; font-size: 0.8rem; color: light-dark(#d1d5db, #4b5563); letter-spacing: normal; text-transform: none; }
 
     .popup-name { font-size: 1.0625rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
@@ -171,15 +171,16 @@
       box-shadow: none;
     }
 
-    .popup-edit {
+    .popup-move {
       flex: none; width: 2.75rem; padding: 0;
       display: flex; align-items: center; justify-content: center;
       background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb);
     }
-    .popup-edit:hover { background: light-dark(#e5e7eb, #4b5563); }
-
-    .popup-move { background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); display: flex; align-items: center; justify-content: center; gap: 0.35rem; }
     .popup-move:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    .popup-edit { background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); display: flex; align-items: center; justify-content: center; position: relative; }
+    .popup-edit-icon { position: absolute; left: 0.75rem; display: flex; align-items: center; pointer-events: none; }
+    .popup-edit:hover { background: light-dark(#e5e7eb, #4b5563); }
 
     .popup-delete {
       flex: none; width: 2.75rem; padding: 0;
@@ -293,14 +294,14 @@
       color: light-dark(#9ca3af, #6b7280);
     }
 
-    #modal-overlay {
+    #modal-overlay, #import-overlay, #export-overlay, #remind-overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); z-index: 100;
+      background: rgba(0,0,0,0.5); z-index: 100;
       align-items: center; justify-content: center;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(10px);
     }
 
-    #modal-overlay.open { display: flex; }
+    #modal-overlay.open, #import-overlay.open, #export-overlay.open, #remind-overlay.open { display: flex; }
 
     #modal {
       background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
@@ -348,9 +349,10 @@
     .type-chevron { flex-shrink: 0; opacity: 0.5; transition: transform 0.15s; }
     details[open] .type-chevron { transform: rotate(180deg); }
     .type-options { position: absolute; top: 100%; left: -1px; right: -1px; z-index: 200; background: light-dark(#fff, #374151); border: 1px solid light-dark(#d1d5db, #4b5563); border-top: none; border-radius: 0 0 0.625rem 0.625rem; overflow: hidden; box-shadow: 0 6px 16px rgba(0,0,0,0.14); }
-    .type-option { padding: 0.55rem 0.75rem; font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; color: light-dark(#111827, #f3f4f6); transition: background 0.1s; }
+    .type-option { padding: 0.55rem 0.75rem; font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; cursor: pointer; color: light-dark(#111827, #f3f4f6); transition: background 0.1s; display: flex; align-items: center; justify-content: space-between; }
     .type-option:hover { background: light-dark(rgba(0,0,0,0.05), rgba(255,255,255,0.06)); }
-    .type-option.selected { color: light-dark(#2563eb, #60a5fa); font-weight: 500; }
+    .type-option.selected { color: light-dark(#2563eb, #60a5fa); font-weight: 500; background: light-dark(rgba(37,99,235,0.07), rgba(96,165,250,0.08)); }
+    .type-option.selected::after { content: ""; display: block; width: 0.9rem; height: 0.9rem; flex-shrink: 0; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center/contain no-repeat; }
 
     .modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem; }
 
@@ -367,13 +369,6 @@
     #modal-save { background: #2563eb; color: #fff; }
     #modal-save:hover { background: #1d4ed8; }
 
-    #export-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); z-index: 200;
-      align-items: center; justify-content: center;
-      backdrop-filter: blur(6px);
-    }
-    #export-overlay.open { display: flex; }
     #export-modal {
       background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
       backdrop-filter: blur(30px);
@@ -384,7 +379,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    #export-modal h3 { margin: 0; font-size: 0.95rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); }
+    #export-modal h3, #import-modal h3, #remind-modal h3, #modal h3 { margin: 0; font-size: 0.95rem; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: light-dark(#111827, #f3f4f6); }
     #export-modal p { margin: 0; font-size: 0.85rem; color: light-dark(#4b5563, #9ca3af); }
     .export-fmt-btn {
       width: 100%; padding: 0.45rem 0; font-size: 0.85rem; font-weight: 500;
@@ -401,7 +396,7 @@
     }
     #export-cancel:hover { color: light-dark(#374151, #e5e7eb); }
     #export-types { display: flex; flex-direction: column; margin-bottom: 1rem;}
-    .export-type-item { display: flex; align-items: center; gap: 0.6rem; font-size: 0.875rem; font-family: inherit; cursor: pointer; user-select: none; height: 2.25rem; padding: 0.75rem; transition: background 0.1s, color 0.1s, border-radius 0.1s; color: light-dark(#9ca3af, #6b7280); }
+    .export-type-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-family: inherit; cursor: pointer; user-select: none; padding: 0.9375rem 0.75rem; transition: background 0.1s, color 0.1s, border-radius 0.1s; color: light-dark(#9ca3af, #6b7280); }
     .export-type-item input[type="checkbox"] { display: none; }
     .export-type-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; flex-shrink: 0; opacity: 0.35; transition: opacity 0.1s; }
     .export-type-item:has(input:checked) { background: light-dark(#f3f4f6, #1f2937); color: light-dark(#111827, #f3f4f6); border-radius: 0.625rem; border-bottom-color: transparent; }
@@ -409,14 +404,8 @@
     .export-type-item:has(input:checked):has(+ .export-type-item input:checked) { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
     .export-type-item:has(input:checked) + .export-type-item:has(input:checked) { border-top-left-radius: 0; border-top-right-radius: 0; }
     .export-type-item:hover { color: light-dark(#374151, #e5e7eb); }
+    .export-type-count { margin-left: auto; font-size: 0.75rem; opacity: 0.55; font-variant-numeric: tabular-nums; }
 
-    #remind-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); z-index: 200;
-      align-items: center; justify-content: center;
-      backdrop-filter: blur(6px);
-    }
-    #remind-overlay.open { display: flex; }
     #remind-modal {
       background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
       backdrop-filter: blur(30px);
@@ -425,10 +414,6 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
       display: flex; flex-direction: column; gap: 1rem;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    #remind-modal h3 {
-      margin: 0; font-size: 0.95rem; font-weight: 600;
-      color: light-dark(#111827, #f3f4f6);
     }
     #remind-modal p {
       margin: 0; font-size: 0.85rem; line-height: 1.5;
@@ -484,7 +469,7 @@
 
     #pick-btn {
       position: absolute;
-      top: 1.5rem; left: calc(1rem + 210px + 1rem);
+      top: 1.5rem; left: calc(210px + 1.75rem);
       z-index: 12; width: 2.75rem; height: 2.75rem; padding: 0 0.6rem;
       border-radius: 9999px;
       background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5));
@@ -515,7 +500,7 @@
       font-size: 0.82rem; font-family: inherit; font-weight: 500;
       background: light-dark(#f3f4f6, #374151);
       color: light-dark(#374151, #e5e7eb);
-      border: none; border-radius: 6px; cursor: pointer;
+      border: none; border-radius: 0.625rem; cursor: pointer;
       transition: background 0.15s; box-shadow: none;
     }
 
@@ -526,7 +511,7 @@
       font-size: 0.82rem; font-family: inherit; font-weight: 500;
       background: light-dark(#374151, #1f2937);
       color: light-dark(#fff, #e5e7eb);
-      border: none; border-radius: 0.5rem; cursor: pointer;
+      border: none; border-radius: 0.625rem; cursor: pointer;
       transition: background 0.15s; box-shadow: none;
     }
 
@@ -550,13 +535,6 @@
     }
     .extra-coord-remove:hover { color: light-dark(#ef4444, #f87171); background: light-dark(#fee2e2, rgba(239,68,68,0.15)); }
 
-    #import-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.4); z-index: 100;
-      align-items: center; justify-content: center;
-      backdrop-filter: blur(6px);
-    }
-    #import-overlay.open { display: flex; }
     #import-modal {
       background: light-dark(rgba(255,255,255,0.72), rgba(17,24,39,0.72));
       backdrop-filter: blur(30px);
@@ -566,7 +544,6 @@
       display: flex; flex-direction: column; gap: 0.75rem;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    #import-modal h3 { font-size: 0.95rem; font-weight: 600; color: light-dark(#111827, #f3f4f6); margin: 0 0.25rem; }
     #import-drop-zone {
       border: 2px dashed light-dark(#d1d5db, #4b5563);
       border-radius: 0.75rem; padding: 1.25rem 1rem;
@@ -635,16 +612,36 @@
       <p id="search-empty" style="display:none;">No matches found</p>
     </div>
     <div id="sidebar-footer">
-      <span></span>
       <span id="cache-count">0 caches</span>
-      <button id="theme-btn" onclick="toggleTheme()" title="Toggle dark mode">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </div>
+  </div>
+
+  <div id="map-view-controls">
+    <button id="compass-btn" class="map-ctrl-btn" title="Reset to north" onclick="resetNorth()">
+      <svg id="compass-needle" width="20" height="20" viewBox="0 0 24 24" style="transform-origin:center;transform:rotate(-45deg)">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.55428 21.5288C5.35132 22.75 8.49749 21.4915 14.7898 18.9746C16.132 18.4377 16.8031 18.1693 17.3295 17.7076C17.4637 17.59 17.59 17.4637 17.7076 17.3295C18.1693 16.8031 18.4377 16.132 18.9746 14.7898C21.4915 8.49749 22.75 5.35132 21.5288 3.55428C21.2393 3.1282 20.8718 2.7607 20.4457 2.47117C18.6487 1.25001 15.5025 2.50848 9.21017 5.02542C7.86802 5.56228 7.19695 5.8307 6.67048 6.29238C6.53633 6.41002 6.41002 6.53633 6.29238 6.67048C5.8307 7.19695 5.56228 7.86802 5.02542 9.21017C2.50848 15.5025 1.25001 18.6487 2.47117 20.4457C2.76071 20.8718 3.1282 21.2393 3.55428 21.5288ZM8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12ZM9.75 12C9.75 10.7574 10.7574 9.75 12 9.75C13.2426 9.75 14.25 10.7574 14.25 12C14.25 13.2426 13.2426 14.25 12 14.25C10.7574 14.25 9.75 13.2426 9.75 12Z" fill="currentColor"/>
+      </svg>
+    </button>
+    <div id="zoom-controls">
+      <button class="zoom-btn" title="Zoom in" onclick="map.zoomIn()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <div id="zoom-divider"></div>
+      <button class="zoom-btn" title="Zoom out" onclick="map.zoomOut()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
+    <button id="tilt-btn" class="map-ctrl-btn is-3d" title="Toggle 3D view" onclick="toggleTilt()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.25C11.3953 1.25 10.8384 1.40029 10.2288 1.65242C9.64008 1.89588 8.95633 2.25471 8.1049 2.70153L6.03739 3.78651C4.99242 4.33487 4.15616 4.77371 3.51047 5.20491C2.84154 5.65164 2.32632 6.12201 1.95112 6.75918C1.57718 7.39421 1.40896 8.08184 1.32829 8.90072C1.24999 9.69558 1.24999 10.6731 1.25 11.9026V12.0974C1.24999 13.3268 1.24999 14.3044 1.32829 15.0993C1.40896 15.9182 1.57718 16.6058 1.95112 17.2408C2.32632 17.878 2.84154 18.3484 3.51047 18.7951C4.15613 19.2263 4.99233 19.6651 6.03723 20.2134L8.10486 21.2985C8.95628 21.7453 9.64008 22.1041 10.2288 22.3476C10.8384 22.5997 11.3953 22.75 12 22.75C12.6047 22.75 13.1616 22.5997 13.7712 22.3476C14.3599 22.1041 15.0437 21.7453 15.8951 21.2985L17.9626 20.2135C19.0076 19.6651 19.8438 19.2263 20.4895 18.7951C21.1585 18.3484 21.6737 17.878 22.0489 17.2408C22.4228 16.6058 22.591 15.9182 22.6717 15.0993C22.75 14.3044 22.75 13.3269 22.75 12.0975V11.9025C22.75 10.6731 22.75 9.69557 22.6717 8.90072C22.591 8.08184 22.4228 7.39421 22.0489 6.75918C21.6737 6.12201 21.1585 5.65164 20.4895 5.20491C19.8438 4.77371 19.0076 4.33487 17.9626 3.7865L15.8951 2.70154C15.0437 2.25472 14.3599 1.89589 13.7712 1.65242C13.1616 1.40029 12.6047 1.25 12 1.25ZM8.7708 4.04608C9.66052 3.57917 10.284 3.2528 10.802 3.03856C11.3062 2.83004 11.6605 2.75 12 2.75C12.3395 2.75 12.6938 2.83004 13.198 3.03856C13.716 3.2528 14.3395 3.57917 15.2292 4.04608L17.2292 5.09563C18.3189 5.66748 19.0845 6.07032 19.6565 6.45232C19.9387 6.64078 20.1604 6.81578 20.3395 6.99174L12 11.1615L3.66054 6.99174C3.83956 6.81578 4.06132 6.64078 4.34352 6.45232C4.91553 6.07032 5.68111 5.66747 6.7708 5.09563L8.7708 4.04608ZM2.93768 8.30736C2.88718 8.52125 2.84901 8.76412 2.82106 9.04778C2.75084 9.7606 2.75 10.6644 2.75 11.9415V12.0585C2.75 13.3356 2.75084 14.2394 2.82106 14.9522C2.88974 15.6494 3.02022 16.1002 3.24367 16.4797C3.46587 16.857 3.78727 17.1762 4.34352 17.5477C4.91553 17.9297 5.68111 18.3325 6.7708 18.9044L8.7708 19.9539C9.66052 20.4208 10.284 20.7472 10.802 20.9614C10.9656 21.0291 11.1134 21.0832 11.25 21.1255V12.4635L2.93768 8.30736ZM12.75 21.1255C12.8866 21.0832 13.0344 21.0291 13.198 20.9614C13.716 20.7472 14.3395 20.4208 15.2292 19.9539L17.2292 18.9044C18.3189 18.3325 19.0845 17.9297 19.6565 17.5477C20.2127 17.1762 20.5341 16.857 20.7563 16.4797C20.9798 16.1002 21.1103 15.6494 21.1789 14.9522C21.2492 14.2394 21.25 13.3356 21.25 12.0585V11.9415C21.25 10.6644 21.2492 9.7606 21.1789 9.04778C21.151 8.76412 21.1128 8.52125 21.0623 8.30736L12.75 12.4635V21.1255Z" fill="currentColor"/>
+      </svg>
+    </button>
+    <button id="map-theme-btn" class="map-ctrl-btn" title="Toggle dark mode" onclick="toggleTheme()"></button>
   </div>
 
   <div id="modal-overlay">
     <div id="modal">
+      <h3>Add New Cache</h3>
       <div class="modal-fields">
         <div class="modal-field">Cache Type
           <div class="type-select-wrapper">
@@ -702,11 +699,12 @@
       <h3>Export Caches</h3>
       <p>Choose cache types you want to export.</p>
       <div id="export-types">
-        <label class="export-type-item"><input type="checkbox" id="exp-traditional" aria-label="Traditional" checked><span class="export-type-dot" style="background:#22c55e"></span>Traditional Cache</label>
-        <label class="export-type-item"><input type="checkbox" id="exp-multi" aria-label="Multi" checked><span class="export-type-dot" style="background:#FB8C00"></span>Multi-Cache</label>
-        <label class="export-type-item"><input type="checkbox" id="exp-mystery" aria-label="Mystery / Wherigo / Letterbox" checked><span class="export-type-dot" style="background:#1976D2"></span>Mystery Cache</label>
-        <label class="export-type-item"><input type="checkbox" id="exp-placeholder" aria-label="Placeholder"><span class="export-type-dot" style="background:#6b7280"></span>Placeholder</label>
+        <label class="export-type-item"><input type="checkbox" id="exp-traditional" aria-label="Traditional" checked><span class="export-type-dot" style="background:#22c55e"></span>Traditional Cache<span class="export-type-count" id="exp-count-traditional"></span></label>
+        <label class="export-type-item"><input type="checkbox" id="exp-multi" aria-label="Multi" checked><span class="export-type-dot" style="background:#FB8C00"></span>Multi-Cache<span class="export-type-count" id="exp-count-multi"></span></label>
+        <label class="export-type-item"><input type="checkbox" id="exp-mystery" aria-label="Mystery / Wherigo / Letterbox" checked><span class="export-type-dot" style="background:#1976D2"></span>Mystery Cache<span class="export-type-count" id="exp-count-mystery"></span></label>
+        <label class="export-type-item"><input type="checkbox" id="exp-placeholder" aria-label="Placeholder"><span class="export-type-dot" style="background:#6b7280"></span>Placeholder<span class="export-type-count" id="exp-count-placeholder"></span></label>
       </div>
+      <p id="export-total-label" style="font-size:0.75rem;color:light-dark(#9ca3af,#6b7280);text-align:center;margin-bottom:-0.25rem;"></p>
       <button class="export-fmt-btn" onclick="exportCaches()" style="display:flex;align-items:center;justify-content:center;gap:0.45rem;"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export caches.csv</button>
     </div>
   </div>
@@ -806,22 +804,29 @@
         const dir = val >= 0 ? posDir : negDir;
         const deg = Math.floor(Math.abs(val));
         const min = ((Math.abs(val) - deg) * 60).toFixed(3).padStart(6, "0");
-        return `${dir} ${String(deg).padStart(posDir === "N" ? 2 : 3, "0")}° ${min}'`;
+        return `${dir} ${String(deg).padStart(posDir === "N" ? 2 : 3, "0")}° ${min}`;
       };
       return `${fmt(lat, "N", "S")} ${fmt(lon, "E", "W")}`;
     }
 
     function showPopup(cache) {
+      const displayGc = cache.primaryGc || cache.gc;
+      const hasRealGc = /^GC/i.test(displayGc);
+      const gcSection = cache.cacheType !== "placeholder"
+        ? (hasRealGc
+            ? `<div class="popup-gc"><a href="https://www.geocaching.com/geocache/${displayGc}" target="_blank" rel="noopener noreferrer">${displayGc}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>`
+            : `<div class="popup-gc popup-gc-none">No GC code</div>`)
+        : "";
       popup
         .setLngLat([cache.lon, cache.lat])
         .setHTML(`
           <div class="popup-inner">
-            ${cache.cacheType !== "placeholder" ? `<div class="popup-gc"><a href="https://coord.info/${cache.primaryGc || cache.gc}" target="_blank" rel="noopener noreferrer">${cache.primaryGc || cache.gc}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>` : ""}
+            ${gcSection}
             <div class="popup-name">${cache.cacheName}</div>
             <div class="popup-coords">${toDMM(cache.lat, cache.lon)}</div>
             <div class="popup-actions">
-              <button class="popup-btn popup-edit" onclick="enterMoveMode('${cache.gc}')" title="Move"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg></button>
-              <button class="popup-btn popup-move" onclick="showPopupEditMode('${cache.gc}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg>Edit</button>
+              <button class="popup-btn popup-move" onclick="enterMoveMode('${cache.gc}')" title="Move"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg></button>
+              <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')"><span class="popup-edit-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg></span>Edit</button>
               <button class="popup-btn popup-delete" onclick="showDeleteConfirm('${cache.gc}')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11V17"/><path d="M14 11V17"/><path d="M4 7H20"/><path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z"/><path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"/></svg></button>
             </div>
           </div>
@@ -929,10 +934,15 @@
         return lbl;
       }
 
+      const editDisplayGc = cache.primaryGc || cache.gc;
+      const editHasRealGc = /^GC/i.test(editDisplayGc);
+      const gcField = makeField("GC Code", "edit-gc", editHasRealGc ? editDisplayGc : "");
+      if (!editHasRealGc) gcField.querySelector("input").placeholder = "No GC code set";
+
       fields.append(
         typeLabel_,
         makeField("Cache Name", "edit-name", cache.cacheName),
-        makeField("GC Code", "edit-gc", cache.gc),
+        gcField,
         makeField("Coordinates", "edit-coords", toDMM(cache.lat, cache.lon))
       );
 
@@ -1065,12 +1075,12 @@
       const gcEl = document.getElementById("edit-gc");
       const nameEl = document.getElementById("edit-name");
       const typeEl = document.getElementById("edit-type");
-      const newGc = gcEl ? gcEl.value.trim() : oldCache.gc;
+      const newGc = (gcEl && gcEl.value.trim()) ? gcEl.value.trim() : oldCache.gc;
       const cacheName = nameEl ? nameEl.value.trim() : oldCache.cacheName;
       const cacheType = typeEl ? typeEl.value : oldCache.cacheType;
       const coordRaw = document.getElementById("edit-coords").value.trim();
 
-      if (!newGc || !cacheName || !coordRaw) return;
+      if (!cacheName || !coordRaw) return;
       const parsed = fromDMM(coordRaw);
       if (!parsed) return;
 
@@ -1207,6 +1217,30 @@
     });
 
     const mapReady = new Promise(resolve => map.once("load", resolve));
+
+    // Compass + 3D controls
+    let mapIs3D = true;
+
+    function resetNorth() {
+      map.easeTo({ bearing: 0, duration: 400 });
+    }
+
+    function toggleTilt() {
+      mapIs3D = !mapIs3D;
+      map.easeTo({ pitch: mapIs3D ? 60 : 0, duration: 500 });
+      document.getElementById("tilt-btn").classList.toggle("is-3d", mapIs3D);
+    }
+
+    map.on("rotate", () => {
+      const bearing = map.getBearing();
+      const needle = document.getElementById("compass-needle");
+      if (needle) needle.style.transform = `rotate(${-bearing - 45}deg)`;
+    });
+
+    map.on("pitchend", () => {
+      mapIs3D = map.getPitch() > 5;
+      document.getElementById("tilt-btn").classList.toggle("is-3d", mapIs3D);
+    });
 
     // Returns a GeoJSON Polygon circle given [lng, lat], radius in meters
     function geoCircle(center, radiusMeters, steps = 64) {
@@ -1449,11 +1483,12 @@
     const SUN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
 
     document.body.classList.add("dark");
-    document.getElementById("theme-btn").innerHTML = SUN_SVG;
+    document.getElementById("map-theme-btn").innerHTML = SUN_SVG;
 
     function toggleTheme() {
       const isDark = document.body.classList.toggle("dark");
-      document.getElementById("theme-btn").innerHTML = isDark ? SUN_SVG : MOON_SVG;
+      const icon = isDark ? SUN_SVG : MOON_SVG;
+      document.getElementById("map-theme-btn").innerHTML = icon;
       // Remove layer-click handlers before setStyle wipes the layers
       caches.forEach(cache => {
         if (cache._mapClickHandler) {
@@ -1770,7 +1805,21 @@
       resultEl.style.display = "block";
     }
 
+    function updateExportTotal() {
+      const total = ["traditional", "multi", "mystery", "placeholder"]
+        .filter(t => document.getElementById(`exp-${t}`)?.checked)
+        .reduce((sum, t) => sum + caches.filter(c => c.cacheType === t).length, 0);
+      const el = document.getElementById("export-total-label");
+      if (el) el.textContent = `${total} cache${total !== 1 ? "s" : ""} will be exported`;
+    }
+
     function openExportModal() {
+      ["traditional", "multi", "mystery", "placeholder"].forEach(type => {
+        const count = caches.filter(c => c.cacheType === type).length;
+        const el = document.getElementById(`exp-count-${type}`);
+        if (el) el.textContent = count;
+      });
+      updateExportTotal();
       document.getElementById("export-overlay").classList.add("open");
     }
 
@@ -1786,6 +1835,7 @@
       const checkboxes = document.querySelectorAll("#export-types input[type='checkbox']");
       const checkedCount = [...checkboxes].filter(cb => cb.checked).length;
       if (checkedCount === 0) e.target.checked = true;
+      updateExportTotal();
     });
 
     function exportCaches() {
