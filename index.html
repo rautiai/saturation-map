@@ -135,7 +135,7 @@
       padding: 0;
       border-radius: 1.25rem;
       box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      min-width: 220px;
+      min-width: 230px;
       overflow: hidden;
     }
 
@@ -170,15 +170,31 @@
       box-shadow: none;
     }
 
-    .popup-edit { background: light-dark(#f3f4f6, #374151); color: light-dark(#6b7280, #9ca3af); }
+    .popup-edit {
+      flex: none; width: 2.75rem; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb);
+    }
     .popup-edit:hover { background: light-dark(#e5e7eb, #4b5563); }
+
+    .popup-move { background: light-dark(#f3f4f6, #374151); color: light-dark(#374151, #e5e7eb); display: flex; align-items: center; justify-content: center; gap: 0.35rem; }
+    .popup-move:hover { background: light-dark(#e5e7eb, #4b5563); }
 
     .popup-delete {
       flex: none; width: 2.75rem; padding: 0;
       display: flex; align-items: center; justify-content: center;
-      background: #FF5252; color: #fff;
+      background: #FF5252; color: #e5e7eb;
     }
     .popup-delete:hover { background: #E53935; }
+
+    .move-marker {
+      width: 2rem; height: 2rem;
+      background: light-dark(rgba(255,255,255,0.92), rgba(17,24,39,0.92));
+      border: 2px dashed #2563eb; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: grab; color: #2563eb;
+    }
+    .move-marker:active { cursor: grabbing; }
 
     .popup-confirm { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
     .popup-confirm-text { font-size: 0.9rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: light-dark(#374151, #d1d5db); }
@@ -679,11 +695,11 @@
     <div id="import-modal">
       <h3>Import Caches</h3>
       <div id="import-drop-zone">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         <p>Drop a .CSV or .TSV file here</p>
         <p class="import-drop-sub">or paste data in the field below</p>
       </div>
-      <textarea id="import-textarea" spellcheck="false" placeholder="name,latitude,longitude,circle_radius,color&#10;My Cache,65.0134,25.4612,161,#22c55e&#10;Another Cache,65.0200,25.4700,200,#1976D2"></textarea>
+      <textarea id="import-textarea" spellcheck="false" placeholder="name,latitude,longitude,circle_radius,color&#10;My Cache,65.0134,25.4612,161,blue&#10;Another Cache,65.0200,25.4700,161,green"></textarea>
       <div id="import-result" style="display:none;"></div>
       <div class="modal-footer">
         <button id="import-cancel" onclick="closeImportModal()">Cancel</button>
@@ -784,8 +800,9 @@
             <div class="popup-name">${cache.cacheName}</div>
             <div class="popup-coords">${toDMM(cache.lat, cache.lon)}</div>
             <div class="popup-actions">
-              <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')">Edit</button>
-              <button class="popup-btn popup-delete" onclick="showDeleteConfirm('${cache.gc}')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+              <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg></button>
+              <button class="popup-btn popup-move" onclick="enterMoveMode('${cache.gc}')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg>Move</button>
+              <button class="popup-btn popup-delete" onclick="showDeleteConfirm('${cache.gc}')" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11V17"/><path d="M14 11V17"/><path d="M4 7H20"/><path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z"/><path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"/></svg></button>
             </div>
           </div>
         `)
@@ -823,6 +840,72 @@
     function cancelEdit(gc) {
       const cache = caches.find(c => c.gc === gc);
       if (cache) showPopup(cache);
+    }
+
+    let _activeMoveMarker = null;
+
+    function enterMoveMode(gc) {
+      const cache = caches.find(c => c.gc === gc);
+      if (!cache) return;
+      popup.remove();
+
+      const origLon = cache.lon;
+      const origLat = cache.lat;
+
+      const el = document.createElement('div');
+      el.className = 'move-marker';
+      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg>';
+
+      _activeMoveMarker = new maplibregl.Marker({ element: el, draggable: true })
+        .setLngLat([origLon, origLat])
+        .addTo(map);
+
+      const id = `cache-${gc}`;
+      _activeMoveMarker.on('drag', () => {
+        const { lng, lat } = _activeMoveMarker.getLngLat();
+        if (map.getSource(id)) map.getSource(id).setData(geoCircle([lng, lat], cache.radius || RADIUS));
+        if (map.getSource(`${id}-dot`)) map.getSource(`${id}-dot`).setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } });
+      });
+
+      _activeMoveMarker.on('dragend', () => {
+        const { lng, lat } = _activeMoveMarker.getLngLat();
+        popup
+          .setLngLat([lng, lat])
+          .setHTML(`
+            <div class="popup-confirm">
+              <div class="popup-confirm-text">Move <strong>${cache.cacheName}</strong> here?</div>
+              <div class="popup-confirm-actions">
+                <button class="popup-confirm-no" onclick="cancelMove('${gc}', ${origLon}, ${origLat})">Cancel</button>
+                <button class="popup-confirm-yes" style="background:#2563eb" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'" onclick="confirmMove('${gc}', ${lng}, ${lat})">Save</button>
+              </div>
+            </div>
+          `)
+          .addTo(map);
+      });
+    }
+
+    async function confirmMove(gc, lng, lat) {
+      const cache = caches.find(c => c.gc === gc);
+      if (!cache) return;
+      if (_activeMoveMarker) { _activeMoveMarker.remove(); _activeMoveMarker = null; }
+      cache.lon = lng;
+      cache.lat = lat;
+      const record = { cacheName: cache.cacheName, gc: cache.gc, cacheType: cache.cacheType, lon: lng, lat };
+      if (cache.primaryGc) record.primaryGc = cache.primaryGc;
+      if (cache.radius)    record.radius    = cache.radius;
+      await dbSave(db, record);
+      bumpChangeCount();
+      showPopup(cache);
+    }
+
+    function cancelMove(gc, origLon, origLat) {
+      if (_activeMoveMarker) { _activeMoveMarker.remove(); _activeMoveMarker = null; }
+      const cache = caches.find(c => c.gc === gc);
+      if (!cache) return;
+      const id = `cache-${gc}`;
+      if (map.getSource(id)) map.getSource(id).setData(geoCircle([origLon, origLat], cache.radius || RADIUS));
+      if (map.getSource(`${id}-dot`)) map.getSource(`${id}-dot`).setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [origLon, origLat] } });
+      showPopup(cache);
     }
 
     async function saveEdit(oldGc) {
@@ -1159,24 +1242,41 @@
         map.getSource("pick-preview").setData({ type: "Feature", geometry: { type: "Point", coordinates: pickPreviewCoords } });
       }
       const dmm = toDMM(lat, lng);
-      coordPopup
-        .setLngLat(e.lngLat)
-        .setHTML(`
-          <div class="coord-popup-inner">
-            <div class="coord-popup-value">${dmm}</div>
-            <button class="coord-copy-btn" onclick="copyCoords(this, '${dmm}')">Copy coordinates</button>
-            <button class="coord-add-btn" onclick="addPlaceholder(${lat}, ${lng})">Add placeholder</button>
-          </div>
-        `)
-        .addTo(map);
+      const popupEl = document.createElement("div");
+      popupEl.className = "coord-popup-inner";
+      const val = document.createElement("div");
+      val.className = "coord-popup-value";
+      val.textContent = dmm;
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "coord-copy-btn";
+      copyBtn.textContent = "Copy coordinates";
+      copyBtn.addEventListener("click", () => copyCoords(copyBtn, dmm));
+      const addBtn = document.createElement("button");
+      addBtn.className = "coord-add-btn";
+      addBtn.textContent = "Add placeholder";
+      addBtn.addEventListener("click", () => addPlaceholder(lat, lng));
+      popupEl.append(val, copyBtn, addBtn);
+      coordPopup.setLngLat(e.lngLat).setDOMContent(popupEl).addTo(map);
     });
 
     function copyCoords(btn, text) {
-      navigator.clipboard.writeText(text).then(() => {
-        const orig = btn.textContent;
-        btn.textContent = "Copied!";
-        setTimeout(() => { btn.textContent = orig; }, 1500);
-      });
+      const orig = btn.textContent;
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => execCopy(text));
+      } else {
+        execCopy(text);
+      }
+    }
+    function execCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
     }
 
     async function addPlaceholder(lat, lng) {
