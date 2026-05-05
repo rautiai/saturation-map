@@ -25,11 +25,13 @@
     #export-btn { width: 2.75rem; height: 2.75rem; padding: 0; display: flex; align-items: center; justify-content: center; border: none; border-left: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); border-radius: 0 5rem 5rem 0; background: transparent; color: light-dark(#374151, #e5e7eb); cursor: pointer; transition: background 0.15s; box-shadow: none; }
     #export-btn:hover { background: light-dark(rgba(255,255,255,0.7), rgba(17,24,39,0.7)); }
 
-    #map-view-controls { position: absolute; left: calc(210px + 1.75rem); bottom: 2rem; z-index: 10; display: flex; flex-direction: column; gap: 0.5rem; }
+    #map-view-controls { position: absolute; left: calc(210px + 1.75rem); bottom: 1.5rem; z-index: 10; display: flex; flex-direction: column; gap: 0.5rem; }
     .map-ctrl-btn { width: 2.75rem; height: 2.75rem; padding: 0; border-radius: 50%; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); color: light-dark(#374151, #e5e7eb); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, opacity 0.2s; }
     .map-ctrl-btn:hover { background: light-dark(rgba(255,255,255,0.8), rgba(17,24,39,0.8)); }
-    #zoom-controls { display: flex; flex-direction: column; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); border-radius: 5rem; overflow: hidden; }
-    .zoom-btn { width: 2.75rem; height: 2.75rem; padding: 0; background: transparent; border: none; border-radius: 0; box-shadow: none; color: light-dark(#374151, #e5e7eb); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    #zoom-controls { display: flex; flex-direction: column; background: light-dark(rgba(255,255,255,0.5), rgba(17,24,39,0.5)); backdrop-filter: blur(30px); border: 1px solid light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.15); border-radius: 5rem; overflow: visible; }
+    .zoom-btn { width: 2.75rem; height: 2.75rem; padding: 0; background: transparent; border: none; border-radius: 0; box-shadow: none; color: light-dark(#374151, #e5e7eb); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; position: relative; }
+    .zoom-btn:first-child { border-radius: 5rem 5rem 0 0; }
+    .zoom-btn:last-child { border-radius: 0 0 5rem 5rem; }
     .zoom-btn:hover { background: light-dark(rgba(0,0,0,0.06), rgba(255,255,255,0.08)); }
     #zoom-divider { height: 1px; background: light-dark(rgba(0,0,0,0.07), rgba(255,255,255,0.08)); flex-shrink: 0; }
 
@@ -445,6 +447,21 @@
       z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
     [data-tooltip]:not(.coord-info-icon):hover::after { opacity: 1; }
+    [data-tooltip-right]::after {
+      content: attr(data-tooltip-right);
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      left: calc(100% + 8px);
+      background: light-dark(#1f2937, #374151); color: #f9fafb;
+      font-size: 0.75rem; font-weight: 500;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4; white-space: nowrap;
+      padding: 0.35rem 0.6rem; border-radius: 0.4rem;
+      pointer-events: none; opacity: 0;
+      transition: opacity 0.15s 0.3s;
+      z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    [data-tooltip-right]:hover::after { opacity: 1; }
 
     .coord-info-icon {
       display: inline-flex; align-items: center; justify-content: center;
@@ -617,26 +634,27 @@
   </div>
 
   <div id="map-view-controls">
-    <button id="compass-btn" class="map-ctrl-btn" title="Reset to north" onclick="resetNorth()">
-      <svg id="compass-needle" width="20" height="20" viewBox="0 0 24 24" style="transform-origin:center;transform:rotate(-45deg)">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M3.55428 21.5288C5.35132 22.75 8.49749 21.4915 14.7898 18.9746C16.132 18.4377 16.8031 18.1693 17.3295 17.7076C17.4637 17.59 17.59 17.4637 17.7076 17.3295C18.1693 16.8031 18.4377 16.132 18.9746 14.7898C21.4915 8.49749 22.75 5.35132 21.5288 3.55428C21.2393 3.1282 20.8718 2.7607 20.4457 2.47117C18.6487 1.25001 15.5025 2.50848 9.21017 5.02542C7.86802 5.56228 7.19695 5.8307 6.67048 6.29238C6.53633 6.41002 6.41002 6.53633 6.29238 6.67048C5.8307 7.19695 5.56228 7.86802 5.02542 9.21017C2.50848 15.5025 1.25001 18.6487 2.47117 20.4457C2.76071 20.8718 3.1282 21.2393 3.55428 21.5288ZM8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12ZM9.75 12C9.75 10.7574 10.7574 9.75 12 9.75C13.2426 9.75 14.25 10.7574 14.25 12C14.25 13.2426 13.2426 14.25 12 14.25C10.7574 14.25 9.75 13.2426 9.75 12Z" fill="currentColor"/>
+    <button id="compass-btn" class="map-ctrl-btn" data-tooltip-right="Reset north" onclick="resetNorth()">
+      <svg id="compass-needle" width="24" height="24" viewBox="0 0 24 24" fill="none" style="transform-origin:center;transform:rotate(-45deg)">
+        <path d="M15.94 7.61999L11.06 9.61999C10.7251 9.75225 10.421 9.95185 10.1664 10.2064C9.91185 10.461 9.71225 10.7651 9.57999 11.1L7.57999 15.98C7.54715 16.0636 7.54869 16.1567 7.58429 16.2392C7.61988 16.3216 7.68664 16.3866 7.76999 16.42C7.85065 16.4499 7.93934 16.4499 8.02 16.42L12.9 14.42C13.2348 14.2877 13.539 14.0881 13.7936 13.8336C14.0481 13.579 14.2477 13.2748 14.38 12.94L16.38 8.05999C16.4128 7.97643 16.4113 7.88326 16.3757 7.80082C16.3401 7.71839 16.2733 7.65338 16.19 7.61999C16.1093 7.59013 16.0207 7.59013 15.94 7.61999ZM12 13C11.8022 13 11.6089 12.9413 11.4444 12.8315C11.28 12.7216 11.1518 12.5654 11.0761 12.3827C11.0004 12.2 10.9806 11.9989 11.0192 11.8049C11.0578 11.6109 11.153 11.4327 11.2929 11.2929C11.4327 11.153 11.6109 11.0578 11.8049 11.0192C11.9989 10.9806 12.2 11.0004 12.3827 11.0761C12.5654 11.1518 12.7216 11.28 12.8315 11.4444C12.9413 11.6089 13 11.8022 13 12C13 12.2652 12.8946 12.5196 12.7071 12.7071C12.5196 12.8946 12.2652 13 12 13Z" fill="currentColor"/>
+        <path d="M12 21C10.22 21 8.47991 20.4722 6.99987 19.4832C5.51983 18.4943 4.36628 17.0887 3.68509 15.4442C3.0039 13.7996 2.82567 11.99 3.17294 10.2442C3.5202 8.49836 4.37737 6.89472 5.63604 5.63604C6.89472 4.37737 8.49836 3.5202 10.2442 3.17294C11.99 2.82567 13.7996 3.0039 15.4442 3.68509C17.0887 4.36628 18.4943 5.51983 19.4832 6.99987C20.4722 8.47991 21 10.22 21 12C21 14.387 20.0518 16.6761 18.364 18.364C16.6761 20.0518 14.387 21 12 21ZM12 4.5C10.5166 4.5 9.0666 4.93987 7.83323 5.76398C6.59986 6.58809 5.63856 7.75943 5.07091 9.12988C4.50325 10.5003 4.35473 12.0083 4.64411 13.4632C4.9335 14.918 5.64781 16.2544 6.6967 17.3033C7.7456 18.3522 9.08197 19.0665 10.5368 19.3559C11.9917 19.6453 13.4997 19.4968 14.8701 18.9291C16.2406 18.3614 17.4119 17.4001 18.236 16.1668C19.0601 14.9334 19.5 13.4834 19.5 12C19.5 10.0109 18.7098 8.10323 17.3033 6.6967C15.8968 5.29018 13.9891 4.5 12 4.5Z" fill="currentColor"/>
       </svg>
     </button>
     <div id="zoom-controls">
-      <button class="zoom-btn" title="Zoom in" onclick="map.zoomIn()">
+      <button class="zoom-btn" data-tooltip-right="Zoom in" onclick="map.zoomIn()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
       <div id="zoom-divider"></div>
-      <button class="zoom-btn" title="Zoom out" onclick="map.zoomOut()">
+      <button class="zoom-btn" data-tooltip-right="Zoom out" onclick="map.zoomOut()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
-    <button id="tilt-btn" class="map-ctrl-btn is-3d" title="Toggle 3D view" onclick="toggleTilt()">
+    <button id="tilt-btn" class="map-ctrl-btn" data-tooltip-right="Toggle 3D" onclick="toggleTilt()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" clip-rule="evenodd" d="M12 1.25C11.3953 1.25 10.8384 1.40029 10.2288 1.65242C9.64008 1.89588 8.95633 2.25471 8.1049 2.70153L6.03739 3.78651C4.99242 4.33487 4.15616 4.77371 3.51047 5.20491C2.84154 5.65164 2.32632 6.12201 1.95112 6.75918C1.57718 7.39421 1.40896 8.08184 1.32829 8.90072C1.24999 9.69558 1.24999 10.6731 1.25 11.9026V12.0974C1.24999 13.3268 1.24999 14.3044 1.32829 15.0993C1.40896 15.9182 1.57718 16.6058 1.95112 17.2408C2.32632 17.878 2.84154 18.3484 3.51047 18.7951C4.15613 19.2263 4.99233 19.6651 6.03723 20.2134L8.10486 21.2985C8.95628 21.7453 9.64008 22.1041 10.2288 22.3476C10.8384 22.5997 11.3953 22.75 12 22.75C12.6047 22.75 13.1616 22.5997 13.7712 22.3476C14.3599 22.1041 15.0437 21.7453 15.8951 21.2985L17.9626 20.2135C19.0076 19.6651 19.8438 19.2263 20.4895 18.7951C21.1585 18.3484 21.6737 17.878 22.0489 17.2408C22.4228 16.6058 22.591 15.9182 22.6717 15.0993C22.75 14.3044 22.75 13.3269 22.75 12.0975V11.9025C22.75 10.6731 22.75 9.69557 22.6717 8.90072C22.591 8.08184 22.4228 7.39421 22.0489 6.75918C21.6737 6.12201 21.1585 5.65164 20.4895 5.20491C19.8438 4.77371 19.0076 4.33487 17.9626 3.7865L15.8951 2.70154C15.0437 2.25472 14.3599 1.89589 13.7712 1.65242C13.1616 1.40029 12.6047 1.25 12 1.25ZM8.7708 4.04608C9.66052 3.57917 10.284 3.2528 10.802 3.03856C11.3062 2.83004 11.6605 2.75 12 2.75C12.3395 2.75 12.6938 2.83004 13.198 3.03856C13.716 3.2528 14.3395 3.57917 15.2292 4.04608L17.2292 5.09563C18.3189 5.66748 19.0845 6.07032 19.6565 6.45232C19.9387 6.64078 20.1604 6.81578 20.3395 6.99174L12 11.1615L3.66054 6.99174C3.83956 6.81578 4.06132 6.64078 4.34352 6.45232C4.91553 6.07032 5.68111 5.66747 6.7708 5.09563L8.7708 4.04608ZM2.93768 8.30736C2.88718 8.52125 2.84901 8.76412 2.82106 9.04778C2.75084 9.7606 2.75 10.6644 2.75 11.9415V12.0585C2.75 13.3356 2.75084 14.2394 2.82106 14.9522C2.88974 15.6494 3.02022 16.1002 3.24367 16.4797C3.46587 16.857 3.78727 17.1762 4.34352 17.5477C4.91553 17.9297 5.68111 18.3325 6.7708 18.9044L8.7708 19.9539C9.66052 20.4208 10.284 20.7472 10.802 20.9614C10.9656 21.0291 11.1134 21.0832 11.25 21.1255V12.4635L2.93768 8.30736ZM12.75 21.1255C12.8866 21.0832 13.0344 21.0291 13.198 20.9614C13.716 20.7472 14.3395 20.4208 15.2292 19.9539L17.2292 18.9044C18.3189 18.3325 19.0845 17.9297 19.6565 17.5477C20.2127 17.1762 20.5341 16.857 20.7563 16.4797C20.9798 16.1002 21.1103 15.6494 21.1789 14.9522C21.2492 14.2394 21.25 13.3356 21.25 12.0585V11.9415C21.25 10.6644 21.2492 9.7606 21.1789 9.04778C21.151 8.76412 21.1128 8.52125 21.0623 8.30736L12.75 12.4635V21.1255Z" fill="currentColor"/>
       </svg>
     </button>
-    <button id="map-theme-btn" class="map-ctrl-btn" title="Toggle dark mode" onclick="toggleTheme()"></button>
+    <button id="map-theme-btn" class="map-ctrl-btn" data-tooltip-right="Toggle theme" onclick="toggleTheme()"></button>
   </div>
 
   <div id="modal-overlay">
@@ -697,7 +715,7 @@
   <div id="export-overlay">
     <div id="export-modal">
       <h3>Export Caches</h3>
-      <p>Choose cache types you want to export.</p>
+      <p>Select cache types you want to export.</p>
       <div id="export-types">
         <label class="export-type-item"><input type="checkbox" id="exp-traditional" aria-label="Traditional" checked><span class="export-type-dot" style="background:#22c55e"></span>Traditional Cache<span class="export-type-count" id="exp-count-traditional"></span></label>
         <label class="export-type-item"><input type="checkbox" id="exp-multi" aria-label="Multi" checked><span class="export-type-dot" style="background:#FB8C00"></span>Multi-Cache<span class="export-type-count" id="exp-count-multi"></span></label>
@@ -1122,6 +1140,9 @@
           map.flyTo({ center: [newCache.lon, newCache.lat], zoom: 15, speed: 1.4 });
           map.once("moveend", () => showPopup(newCache));
         });
+      } else if (newCache.cacheType !== "placeholder") {
+        // Was a placeholder with no sidebar entry — now a real cache, add it
+        addCacheToList(newCache);
       }
 
       bumpChangeCount();
@@ -1201,7 +1222,7 @@
         map.flyTo({ center: [cache.lon, cache.lat], zoom: 15, speed: 1.4 });
         map.once("moveend", () => showPopup(cache));
       });
-      list.appendChild(li);
+      list.prepend(li);
     }
 
     const LIGHT_STYLE = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json";
@@ -1213,13 +1234,14 @@
       style: DARK_STYLE,
       center: CENTER,
       zoom: 14,
-      pitch: 60,
+      pitch: localStorage.getItem("map3d") === "false" ? 0 : 60,
     });
 
     const mapReady = new Promise(resolve => map.once("load", resolve));
 
     // Compass + 3D controls
-    let mapIs3D = true;
+    let mapIs3D = localStorage.getItem("map3d") !== "false";
+    document.getElementById("tilt-btn").classList.toggle("is-3d", mapIs3D);
 
     function resetNorth() {
       map.easeTo({ bearing: 0, duration: 400 });
@@ -1227,6 +1249,7 @@
 
     function toggleTilt() {
       mapIs3D = !mapIs3D;
+      localStorage.setItem("map3d", mapIs3D);
       map.easeTo({ pitch: mapIs3D ? 60 : 0, duration: 500 });
       document.getElementById("tilt-btn").classList.toggle("is-3d", mapIs3D);
     }
@@ -1380,7 +1403,7 @@
 
       caches = stored;
       list.innerHTML = "";
-      caches.forEach(addCacheToList);
+      [...caches].reverse().forEach(addCacheToList);
       updateCacheCount();
 
       updateSyncWarning();
@@ -1623,7 +1646,7 @@
 
       const toSave = allCoords.map(({ lat, lon }, i) => {
         const waypointGc = i === 0 ? gc : `${gc}-${i + 1}`;
-        const waypointName = i === 0 ? cacheName : `${cacheName} (${i + 1})`;
+        const waypointName = allCoords.length > 1 ? `${cacheName} (${i + 1})` : cacheName;
         return {
           cacheName: waypointName,
           gc: waypointGc,
@@ -1699,13 +1722,14 @@
       const headers = lines[0].split(delim).map(h => h.trim().toLowerCase());
 
       const idx = {
-        name: headers.indexOf("name"),
-        lat:  headers.indexOf("latitude"),
-        lon:  headers.indexOf("longitude"),
-        rad:  headers.indexOf("circle_radius"),
-        col:  headers.indexOf("color"),
-        gc:   headers.indexOf("gc_code"),
-        type: headers.indexOf("cache_type"),
+        name:      headers.indexOf("name"),
+        lat:       headers.indexOf("latitude"),
+        lon:       headers.indexOf("longitude"),
+        rad:       headers.indexOf("circle_radius"),
+        col:       headers.indexOf("custom_color") !== -1 ? headers.indexOf("custom_color") : headers.indexOf("color"),
+        gc:        headers.indexOf("gc_code"),
+        type:      headers.indexOf("cache_type"),
+        primaryGc: headers.indexOf("primary_gc"),
       };
 
       if (idx.name === -1 || idx.lat === -1 || idx.lon === -1) {
@@ -1714,8 +1738,29 @@
 
       const rows = [], skipped = [];
 
+      function splitCsvRow(line, d) {
+        const cols = [];
+        let cur = "", inQ = false;
+        for (let ci = 0; ci < line.length; ci++) {
+          const ch = line[ci];
+          if (inQ) {
+            if (ch === '"' && line[ci + 1] === '"') { cur += '"'; ci++; }
+            else if (ch === '"') inQ = false;
+            else cur += ch;
+          } else if (ch === '"') {
+            inQ = true;
+          } else if (ch === d) {
+            cols.push(cur.trim()); cur = "";
+          } else {
+            cur += ch;
+          }
+        }
+        cols.push(cur.trim());
+        return cols;
+      }
+
       for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(delim).map(c => c.trim());
+        const cols = splitCsvRow(lines[i], delim);
         const name = cols[idx.name] || "";
         const lat  = parseFloat(cols[idx.lat]);
         const lon  = parseFloat(cols[idx.lon]);
@@ -1733,11 +1778,14 @@
         const rawType  = idx.type !== -1 ? (cols[idx.type] || "").toLowerCase() : "";
         const cacheType = Object.keys(TYPE_COLOR).includes(rawType) ? rawType : "traditional";
 
+        const primaryGc = idx.primaryGc !== -1 ? (cols[idx.primaryGc] || null) : null;
+
         rows.push({
           name, lat, lon, cacheType,
           radius: isNaN(radius) || radius <= 0 ? null : radius,
           color: color || null,
           gc: gc || null,
+          primaryGc: primaryGc || null,
         });
       }
 
@@ -1775,8 +1823,9 @@
           cacheType: row.cacheType,
           lon: row.lon,
           lat: row.lat,
-          ...(row.radius ? { radius: row.radius } : {}),
-          ...(row.color  ? { customColor: row.color }  : {}),
+          ...(row.radius    ? { radius: row.radius }         : {}),
+          ...(row.color     ? { customColor: row.color }     : {}),
+          ...(row.primaryGc ? { primaryGc: row.primaryGc }   : {}),
         };
         try {
           await dbSave(db, cache);
@@ -1841,20 +1890,27 @@
     function exportCaches() {
       const selectedTypes = ["traditional", "multi", "mystery", "placeholder"]
         .filter(t => document.getElementById(`exp-${t}`)?.checked);
-      const headers = ["name", "gc_code", "cache_type", "latitude", "longitude", "circle_radius", "color"];
+      const headers = ["name", "gc_code", "primary_gc", "cache_type", "latitude", "longitude", "circle_radius", "custom_color"];
+
+      function csvCell(val) {
+        const s = val == null ? "" : String(val);
+        return /[,"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      }
+
       const rows = caches
         .filter(c => selectedTypes.includes(c.cacheType))
         .map(c => [
           c.cacheName,
           c.gc,
+          c.primaryGc || "",
           c.cacheType,
-          c.lat,
-          c.lon,
-          c.radius || RADIUS,
-          c.customColor || TYPE_COLOR[c.cacheType],
+          c.lat.toFixed(6),
+          c.lon.toFixed(6),
+          c.radius || "",
+          c.customColor || "",
         ]);
 
-      const content = [headers, ...rows].map(r => r.join(",")).join("\n");
+      const content = [headers, ...rows].map(r => r.map(csvCell).join(",")).join("\n");
       const blob = new Blob([content], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
