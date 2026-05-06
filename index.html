@@ -1407,6 +1407,8 @@
     initApp();
 
     const coordPopup = new maplibregl.Popup({ offset: 8, closeButton: false });
+    let suppressPickClear = false;
+    coordPopup.on("close", () => { if (!suppressPickClear) clearPickPreview(); });
     let pickMode = false;
     let pickPreviewCoords = null;
 
@@ -1436,8 +1438,7 @@
       if (!pickMode) { coordPopup.remove(); clearPickPreview(); }
     }
 
-    map.on("click", e => {
-      if (!pickMode) return;
+    function handlePickClick(e) {
       const { lat, lng } = e.lngLat;
       pickPreviewCoords = [lng, lat];
       if (map.getSource("pick-preview")) {
@@ -1458,8 +1459,13 @@
       addBtn.textContent = "Add placeholder";
       addBtn.addEventListener("click", () => addPlaceholder(lat, lng));
       popupEl.append(val, copyBtn, addBtn);
+      suppressPickClear = true;
       coordPopup.setLngLat(e.lngLat).setDOMContent(popupEl).addTo(map);
-    });
+      suppressPickClear = false;
+    }
+
+    map.on("click", e => { if (pickMode) handlePickClick(e); });
+    map.on("contextmenu", e => { e.preventDefault(); handlePickClick(e); });
 
     function copyCoords(btn, text) {
       const orig = btn.textContent;
