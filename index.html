@@ -151,6 +151,10 @@
     .maplibregl-popup-anchor-left .maplibregl-popup-tip  { border-right-color: rgba(17,24,39,0.72); }
     .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color:  rgba(17,24,39,0.72); }
 
+    .maplibregl-ctrl-attrib, .maplibregl-ctrl-attrib.maplibregl-compact { background: rgba(17,24,39,0.5); backdrop-filter: blur(30px); color: #9ca3af; border: 1px solid rgba(255,255,255,0.08); }
+    .maplibregl-ctrl-attrib a { color: #9ca3af; }
+    .maplibregl-ctrl-attrib-button { background-color: rgba(17,24,39,0.5) !important; filter: invert(1) brightness(0.7); }
+
     .popup-inner { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
     .popup-inner input { height: 44px;}
 
@@ -1069,11 +1073,14 @@
         .setLngLat([origLon, origLat])
         .addTo(map);
 
-      const id = `cache-${gc}`;
       _activeMoveMarker.on('drag', () => {
         const { lng, lat } = _activeMoveMarker.getLngLat();
-        if (map.getSource(id)) map.getSource(id).setData(geoCircle([lng, lat], cache.radius || RADIUS));
-        if (map.getSource(`${id}-dot`)) map.getSource(`${id}-dot`).setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } });
+        const cf = circlesFC.features.find(f => f.properties.gc === gc);
+        if (cf) cf.geometry = geoCircle([lng, lat], cache.radius || RADIUS).geometry;
+        const df = dotsFC.features.find(f => f.properties.gc === gc);
+        if (df) df.geometry.coordinates = [lng, lat];
+        if (map.getSource("caches-circles")) map.getSource("caches-circles").setData(circlesFC);
+        if (map.getSource("caches-dots"))    map.getSource("caches-dots").setData(dotsFC);
       });
 
       _activeMoveMarker.on('dragend', () => {
@@ -1104,6 +1111,7 @@
       if (cache.radius)    record.radius    = cache.radius;
       await dbSave(db, record);
       bumpChangeCount();
+      refreshMapSources();
       showPopup(cache);
     }
 
@@ -1111,9 +1119,7 @@
       if (_activeMoveMarker) { _activeMoveMarker.remove(); _activeMoveMarker = null; }
       const cache = caches.find(c => c.gc === gc);
       if (!cache) return;
-      const id = `cache-${gc}`;
-      if (map.getSource(id)) map.getSource(id).setData(geoCircle([origLon, origLat], cache.radius || RADIUS));
-      if (map.getSource(`${id}-dot`)) map.getSource(`${id}-dot`).setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [origLon, origLat] } });
+      refreshMapSources();
       showPopup(cache);
     }
 
@@ -1138,25 +1144,14 @@
       const color = newCache.customColor || TYPE_COLOR[newCache.cacheType];
 
       if (newGc !== oldGc) {
-        // Key changed: delete old IDB record and map layers, add new ones
         await dbDelete(db, oldGc);
-        const oldId = `cache-${oldGc}`;
-        if (oldCache._mapClickHandler) map.off("click", `${oldId}-fill`, oldCache._mapClickHandler);
-        [`${oldId}-fill`, `${oldId}-outline`, `${oldId}-dot`, `${oldId}-label`].forEach(lid => { if (map.getLayer(lid)) map.removeLayer(lid); });
-        [oldId, `${oldId}-dot`].forEach(sid => { if (map.getSource(sid)) map.removeSource(sid); });
         await dbSave(db, newCache);
         caches[idx] = newCache;
-        addCacheToMap(newCache);
       } else {
-        // Same key: remove and re-add layers to apply any type/color changes
-        const id = `cache-${newGc}`;
-        if (oldCache._mapClickHandler) map.off("click", `${id}-fill`, oldCache._mapClickHandler);
-        [`${id}-fill`, `${id}-outline`, `${id}-dot`, `${id}-label`].forEach(lid => { if (map.getLayer(lid)) map.removeLayer(lid); });
-        [id, `${id}-dot`].forEach(sid => { if (map.getSource(sid)) map.removeSource(sid); });
         await dbSave(db, newCache);
         caches[idx] = newCache;
-        addCacheToMap(newCache);
       }
+      refreshMapSources();
 
       // Update sidebar li in place, re-wire click listener
       const oldLi = oldCache._li;
@@ -1205,17 +1200,9 @@
       await dbDelete(db, gc);
       bumpChangeCount();
 
-      const id = `cache-${gc}`;
-      if (cache._mapClickHandler) map.off("click", `${id}-fill`, cache._mapClickHandler);
-      [`${id}-fill`, `${id}-outline`, `${id}-dot`, `${id}-label`].forEach(lid => {
-        if (map.getLayer(lid)) map.removeLayer(lid);
-      });
-      [id, `${id}-dot`].forEach(sid => {
-        if (map.getSource(sid)) map.removeSource(sid);
-      });
-
       if (cache._li) cache._li.remove();
       caches.splice(idx, 1);
+      refreshMapSources();
       updateCacheCount();
       popup.remove();
     }
@@ -1311,49 +1298,62 @@
 
     const RADIUS = 161;
 
-    const popup = new maplibregl.Popup({ offset: 10, closeButton: false });
+    let circlesFC = { type: "FeatureCollection", features: [] };
+    let dotsFC    = { type: "FeatureCollection", features: [] };
 
-    function addCacheToMap(cache) {
-      const center = [cache.lon, cache.lat];
-      const color = cache.customColor || TYPE_COLOR[cache.cacheType];
-      const id = `cache-${cache.gc}`;
+    function cacheCircleFeature(cache) {
+      const f = geoCircle([cache.lon, cache.lat], cache.radius || RADIUS);
+      f.properties = { gc: cache.gc, color: cache.customColor || TYPE_COLOR[cache.cacheType], placeholder: cache.cacheType === "placeholder" };
+      return f;
+    }
 
-      map.addSource(id, { type: "geojson", data: geoCircle(center, cache.radius || RADIUS) });
-      map.addLayer({ id: `${id}-fill`, type: "fill", source: id, paint: { "fill-color": color, "fill-opacity": 0.35 } });
-      const outlinePaint = { "line-color": color, "line-width": 2 };
-      if (cache.cacheType === "placeholder") outlinePaint["line-dasharray"] = [4, 1];
-      map.addLayer({ id: `${id}-outline`, type: "line", source: id, paint: outlinePaint });
+    function cacheDotFeature(cache) {
+      const label = cache.cacheName.length > 40 ? cache.cacheName.slice(0, 40) + "…" : cache.cacheName;
+      return {
+        type: "Feature",
+        properties: { gc: cache.gc, color: cache.customColor || TYPE_COLOR[cache.cacheType], label, placeholder: cache.cacheType === "placeholder" },
+        geometry: { type: "Point", coordinates: [cache.lon, cache.lat] }
+      };
+    }
 
-      const dotId = `${id}-dot`;
-      map.addSource(dotId, { type: "geojson", data: { type: "Feature", geometry: { type: "Point", coordinates: center } } });
+    function refreshMapSources() {
+      circlesFC = { type: "FeatureCollection", features: caches.map(cacheCircleFeature) };
+      dotsFC    = { type: "FeatureCollection", features: caches.map(cacheDotFeature) };
+      if (map.getSource("caches-circles")) map.getSource("caches-circles").setData(circlesFC);
+      if (map.getSource("caches-dots"))    map.getSource("caches-dots").setData(dotsFC);
+    }
+
+    function setupSharedLayers() {
+      circlesFC = { type: "FeatureCollection", features: caches.map(cacheCircleFeature) };
+      dotsFC    = { type: "FeatureCollection", features: caches.map(cacheDotFeature) };
+
+      map.addSource("caches-circles", { type: "geojson", data: circlesFC });
+      map.addLayer({ id: "caches-fill",       type: "fill", source: "caches-circles", paint: { "fill-color": ["get", "color"], "fill-opacity": 0.35 } });
+      map.addLayer({ id: "caches-outline",    type: "line", source: "caches-circles", filter: ["!", ["get", "placeholder"]], paint: { "line-color": ["get", "color"], "line-width": 2 } });
+      map.addLayer({ id: "caches-outline-ph", type: "line", source: "caches-circles", filter: ["get", "placeholder"],       paint: { "line-color": ["get", "color"], "line-width": 2, "line-dasharray": [4, 1] } });
+
+      map.addSource("caches-dots", { type: "geojson", data: dotsFC });
+      map.addLayer({ id: "caches-dots", type: "circle", source: "caches-dots", paint: { "circle-radius": 5, "circle-color": ["get", "color"], "circle-stroke-width": 1, "circle-stroke-color": "#ffffff" } });
       map.addLayer({
-        id: dotId, type: "circle", source: dotId,
-        paint: { "circle-radius": 5, "circle-color": color, "circle-stroke-width": 1, "circle-stroke-color": "#ffffff" }
+        id: "caches-labels", type: "symbol", source: "caches-dots",
+        filter: ["!", ["get", "placeholder"]],
+        layout: { "text-field": ["get", "label"], "text-size": 11, "text-offset": [0, 0.7], "text-anchor": "top", "text-font": ["Open Sans Regular", "Noto Sans Regular"] },
+        paint: { "text-color": "#e5e7eb", "text-halo-color": "#1f2937", "text-halo-width": 1.5 }
       });
 
-      if (cache.cacheType !== "placeholder") {
-        map.addLayer({
-          id: `${id}-label`,
-          type: "symbol",
-          source: dotId,
-          layout: {
-            "text-field": cache.cacheName.length > 40 ? cache.cacheName.slice(0, 40) + '...' : cache.cacheName,
-            "text-size": 11,
-            "text-offset": [0, 0.7],
-            "text-anchor": "top",
-            "text-font": ["Open Sans Regular", "Noto Sans Regular"]
-          },
-          paint: {
-            "text-color": "#e5e7eb",
-            "text-halo-color": "#1f2937",
-            "text-halo-width": 1.5
-          }
-        });
-      }
+      map.on("click", "caches-fill", e => {
+        const gc = e.features[0].properties.gc;
+        const cache = caches.find(c => c.gc === gc);
+        if (cache) showPopup(cache);
+      });
+      map.on("mouseenter", "caches-fill", () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "caches-fill", () => { map.getCanvas().style.cursor = ""; });
+    }
 
-      const handler = () => showPopup(cache);
-      cache._mapClickHandler = handler;
-      map.on("click", `${id}-fill`, handler);
+    const popup = new maplibregl.Popup({ offset: 10, closeButton: false });
+
+    function addCacheToMap() {
+      refreshMapSources();
     }
 
 
@@ -1400,7 +1400,7 @@
       updateSyncWarning();
 
       await mapReady;
-      caches.forEach(addCacheToMap);
+      setupSharedLayers();
       setupPickPreview();
     }
 
@@ -1636,8 +1636,8 @@
         await dbSave(db, cache);
         caches.push(cache);
         addCacheToList(cache);
-        addCacheToMap(cache);
       }
+      refreshMapSources();
       bumpChangeCount();
       updateCacheCount();
       closeModal();
@@ -1807,13 +1807,13 @@
           bumpChangeCount();
           caches.push(cache);
           addCacheToList(cache);
-          addCacheToMap(cache);
           imported++;
         } catch (err) {
           allSkipped.push(`"${row.name}": save failed`);
         }
       }
 
+      refreshMapSources();
       updateCacheCount();
 
       if (imported === 0) {
