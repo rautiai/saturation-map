@@ -144,11 +144,9 @@
     .popup-gc a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3em; transition: color 0.15s; }
     .popup-gc a:hover { color: #d1d5db; }
     .popup-gc-none { font-style: italic; font-weight: 400; font-size: 0.8rem; color: #4b5563; letter-spacing: normal; text-transform: none; }
-
     .popup-name { font-size: 1.0625rem; font-weight: 600; color: #f3f4f6; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-    .popup-coords { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; }
-
+    .popup-coords { font-size: 1rem; font-weight: 500; color: #6b7280; width: 100%; white-space: nowrap; cursor: pointer; border-radius: 0.375rem; padding: 0.3rem 0.25rem; margin: 0 0 0.25rem -0.25rem; transition: background 0.15s, color 0.15s; user-select: none; box-sizing: border-box; }
+    .popup-coords:hover { background: rgba(255,255,255,0.07); color: #e5e7eb; }
     .popup-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
 
     .popup-btn {
@@ -282,14 +280,48 @@
       color: #6b7280;
     }
 
-    #modal-overlay, #import-overlay, #export-overlay, #remind-overlay {
+    #modal-overlay, #import-overlay, #export-overlay, #remind-overlay, #intro-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.5); z-index: 100;
       align-items: center; justify-content: center;
       backdrop-filter: blur(10px);
     }
 
-    #modal-overlay.open, #import-overlay.open, #export-overlay.open, #remind-overlay.open { display: flex; }
+    #modal-overlay.open, #import-overlay.open, #export-overlay.open, #remind-overlay.open, #intro-overlay.open { display: flex; }
+
+    #intro-modal {
+      background: rgba(17,24,39,0.92);
+      backdrop-filter: blur(30px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.375rem; 
+      padding: 1.25rem; 
+      width: 380px;
+      max-height: 95vh; 
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.9rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #intro-modal h3 { margin: 0; font-size: 1rem; font-weight: 700; color: #f3f4f6; }
+    #intro-modal p { margin: 0; font-size: 0.84rem; line-height: 1.6; color: #9ca3af; }
+    #intro-modal strong { color: #e5e7eb; font-weight: 600; }
+    #intro-modal .intro-steps { display: flex; flex-direction: column; gap: 0.55rem; padding: 0; margin: 0; list-style: none; }
+    #intro-modal .intro-steps li { font-size: 0.84rem; color: #9ca3af; line-height: 1.55; display: flex; gap: 0.6rem; align-items: flex-start; }
+    #intro-modal .intro-steps li::before { content: attr(data-n); flex-shrink: 0; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: #1f2937; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; color: #6b7280; margin-top: 0.15rem; }
+    #intro-modal .intro-steps li.intro-step-highlight { background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.3); border-radius: 0.625rem; padding: 0.5rem 0.6rem; margin: 0 -0.5rem; color: #93c5fd; }
+    #intro-modal .intro-steps li.intro-step-highlight::before { background: #1e3a5f; border-color: rgba(37,99,235,0.4); color: #60a5fa; }
+    #intro-modal .intro-steps li.intro-step-highlight strong { color: #bfdbfe; }
+    #intro-modal .intro-warn { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2); border-radius: 0.625rem; padding: 0.6rem 0.75rem; font-size: 0.82rem; line-height: 1.55; color: #ca8a04; }
+    #intro-modal .intro-warn strong { color: #fbbf24; }
+    #intro-modal .intro-privacy { font-size: 0.84rem; line-height: 1.5; color: #4b5563; }
+    #intro-modal .intro-privacy strong { color: #6b7280; }
+    #intro-modal .intro-footer { display: flex; justify-content: flex-end; align-items: center; gap: 0.5rem; padding-top: 0.25rem; }
+    #intro-modal .intro-footer a { font-size: 0.8rem; color: #4b5563; text-decoration: none; cursor: pointer; transition: color 0.15s; }
+    #intro-modal .intro-footer a:hover { color: #9ca3af; }
+    #intro-continue { padding: 0.45rem 1.1rem; font-size: 0.85rem; font-weight: 500; font-family: inherit; border: none; border-radius: 0.625rem; cursor: pointer; box-shadow: none; transition: background 0.15s; background: #2563eb; color: #fff; }
+    #intro-continue:hover { background: #1d4ed8; }
 
     #modal {
       background: rgba(17,24,39,0.72);
@@ -603,6 +635,12 @@
         left: 0.75rem;
         right: auto;
       }
+
+      #intro-modal {
+        width: calc(100vw - 2rem);
+        max-width: 100%;
+        padding: 1rem 1rem 0.75rem;
+      }
     }
   </style>
 </head>
@@ -714,6 +752,25 @@
       <p>Updated <strong>map.html</strong> has been downloaded.</p>
       <p>To avoid confusion, <strong>delete this old file</strong> and open the new one instead.</p>
       <button id="remind-ok" onclick="document.getElementById('remind-overlay').classList.remove('open')">Got it</button>
+    </div>
+  </div>
+
+  <div id="intro-overlay">
+    <div id="intro-modal">
+      <h3>Saturation Map</h3>
+      <p>A map tool for geocachers to find free spots in busy areas. Add caches around you and see exactly where there's still room for a new hide. Everything is stored locally on your device, no data is sent to any server.</p>
+      <p style="margin:0;font-size:0.78rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;">How to start</p>
+      <ol class="intro-steps">
+        <li data-n="1"><span><strong>Add caches</strong> one at a time with the New cache button, or all at once by importing a CSV/TSV file. Each cache appears as a circle showing its 161 meter (0.1 mile) exclusion zone.</span></li>
+        <li data-n="2"><span><strong>Test new hiding spots</strong> by right-clicking the map to drop a placeholder pin. Check how it fits among other caches, copy its coordinates, and convert it to a real cache later.</span></li>
+        <li data-n="3"><span><strong>Edit anything</strong> by clicking a cache to change its name, GC code, coordinates, or circle color. Drag it to move it on the map.</span></li>
+        <li data-n="4"><span><strong>Share your data</strong> by exporting your cache list as a CSV file to open on another device or share with a friend.</span></li>
+        <li data-n="5" class="intro-step-highlight"><span><strong>Download new map.html after every session.</strong> Your caches live in temporary browser memory and can disappear at any time. Downloading saves them permanently into the file.</span></li>
+      </ol>
+      <p class="intro-privacy"><strong>Everything stays on your device.</strong> No accounts, no tracking. Only the map tiles are loaded from the internet.</p>
+      <div class="intro-footer">
+        <button id="intro-continue" onclick="closeIntroModal();">Got it</button>
+      </div>
     </div>
   </div>
 
@@ -847,7 +904,7 @@
           <div class="popup-inner">
             ${gcSection}
             <div class="popup-name">${cache.cacheName}</div>
-            <div class="popup-coords">${toDMM(cache.lat, cache.lon)}</div>
+            <div class="popup-coords" data-coords="${toDMM(cache.lat, cache.lon)}" onclick="copyPopupCoords(this)">${toDMM(cache.lat, cache.lon)}</div>
             <div class="popup-actions">
               <button class="popup-btn popup-move" onclick="enterMoveMode('${cache.gc}')" title="Move"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg></button>
               <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')"><span class="popup-edit-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg></span>Edit</button>
@@ -1447,6 +1504,17 @@
         execCopy(text);
       }
     }
+    function copyPopupCoords(el) {
+      const text = el.dataset.coords;
+      const orig = el.textContent;
+      el.textContent = "Copied!";
+      setTimeout(() => { el.textContent = orig; }, 1500);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => execCopy(text));
+      } else {
+        execCopy(text);
+      }
+    }
     function execCopy(text) {
       const ta = document.createElement("textarea");
       ta.value = text;
@@ -1875,6 +1943,21 @@
       a.click();
       URL.revokeObjectURL(url);
       closeExportModal();
+    }
+
+    function hasSeenIntro() {
+      try { return !!localStorage.getItem('intro_seen'); } catch { return false; }
+    }
+    function markIntroSeen() {
+      try { localStorage.setItem('intro_seen', '1'); } catch {}
+    }
+    function closeIntroModal() {
+      markIntroSeen();
+      document.getElementById('intro-overlay').classList.remove('open');
+    }
+
+    if (window.location.protocol !== 'file:' && !hasSeenIntro()) {
+      document.getElementById('intro-overlay').classList.add('open');
     }
 
     function downloadPage() {
