@@ -705,9 +705,9 @@
                   <svg class="type-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </summary>
                 <div class="type-options">
-                  <div class="type-option selected" data-value="traditional" onclick="selectCacheType('traditional','Traditional Cache')">Traditional Cache</div>
-                  <div class="type-option" data-value="multi" onclick="selectCacheType('multi','Multi-Cache')">Multi-Cache</div>
-                  <div class="type-option" data-value="mystery" onclick="selectCacheType('mystery','Mystery Cache')">Mystery Cache</div>
+                  <div class="type-option selected" data-value="traditional" onclick="selectCacheType('traditional')">Traditional Cache</div>
+                  <div class="type-option" data-value="multi" onclick="selectCacheType('multi')">Multi-Cache</div>
+                  <div class="type-option" data-value="mystery" onclick="selectCacheType('mystery')">Mystery Cache</div>
                 </div>
               </details>
             </div>
@@ -820,9 +820,32 @@
     ];
     /* END_CACHES */
 
+    let db;
     let caches = [];
 
-    const TYPE_COLOR = { traditional: "#22c55e", multi: "#FB8C00", mystery: "#1976D2", placeholder: "#6b7280" };
+    const CACHE_TYPES = {
+      traditional: { label: "Traditional Cache", color: "#22c55e", supportsWaypoints: false },
+      multi: { label: "Multi-Cache", color: "#FB8C00", supportsWaypoints: true },
+      mystery: { label: "Mystery Cache", color: "#1976D2", supportsWaypoints: true },
+      placeholder: { label: "Placeholder", color: "#6b7280", supportsWaypoints: false },
+    };
+    const CACHE_TYPE_KEYS = Object.keys(CACHE_TYPES);
+
+    function cacheTypeMeta(type) {
+      return CACHE_TYPES[type] || CACHE_TYPES.traditional;
+    }
+
+    function cacheTypeLabel(type) {
+      return cacheTypeMeta(type).label;
+    }
+
+    function cacheTypeColor(type) {
+      return cacheTypeMeta(type).color;
+    }
+
+    function cacheColor(cache) {
+      return cache.customColor || cacheTypeColor(cache.cacheType);
+    }
 
     // IndexedDB helpers
     function initDB() {
@@ -858,7 +881,31 @@
       });
     }
 
-    let db;
+    function toStoredCache(cache) {
+      const { _li, ...stored } = cache;
+      return stored;
+    }
+
+    function downloadBlob(content, type, filename) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    const EXPORT_HEADERS = ["name", "gc_code", "primary_gc", "cache_type", "latitude", "longitude", "circle_radius", "custom_color"];
+
+    function csvCell(val) {
+      const s = val == null ? "" : String(val);
+      return /[,"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    }
+
+    function csvRowsToString(rows) {
+      return rows.map(row => row.map(csvCell).join(",")).join("\n");
+    }
 
     function fromDMM(str) {
       const m = str.match(/([NS])\s*(\d+)[°d]?\s*([\d.]+)'?\s*([EW])\s*(\d+)[°d]?\s*([\d.]+)'?/i);
@@ -878,12 +925,26 @@
       return `${fmt(lat, "N", "S")} ${fmt(lon, "E", "W")}`;
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function jsCall(name, ...args) {
+      return escapeHtml(`${name}(${args.map(arg => JSON.stringify(arg)).join(", ")})`);
+    }
+
     function showPopup(cache) {
       const displayGc = cache.primaryGc || cache.gc;
       const hasRealGc = /^GC/i.test(displayGc);
+      const dmm = toDMM(cache.lat, cache.lon);
       const gcSection = cache.cacheType !== "placeholder"
         ? (hasRealGc
-            ? `<div class="popup-gc"><a href="https://www.geocaching.com/geocache/${displayGc}" target="_blank" rel="noopener noreferrer">${displayGc}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>`
+            ? `<div class="popup-gc"><a href="https://www.geocaching.com/geocache/${escapeHtml(encodeURIComponent(displayGc))}" target="_blank" rel="noopener noreferrer">${escapeHtml(displayGc)}<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></div>`
             : `<div class="popup-gc popup-gc-none">No GC code</div>`)
         : "";
       popup
@@ -891,12 +952,12 @@
         .setHTML(`
           <div class="popup-inner">
             ${gcSection}
-            <div class="popup-name">${cache.cacheName}</div>
-            <div class="popup-coords" data-coords="${toDMM(cache.lat, cache.lon)}" onclick="copyPopupCoords(this)">${toDMM(cache.lat, cache.lon)}</div>
+            <div class="popup-name">${escapeHtml(cache.cacheName)}</div>
+            <div class="popup-coords" data-coords="${escapeHtml(dmm)}" onclick="copyPopupCoords(this)">${escapeHtml(dmm)}</div>
             <div class="popup-actions">
-              <button class="popup-btn popup-move" onclick="enterMoveMode('${cache.gc}')" title="Move" aria-label="Move cache"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg></button>
-              <button class="popup-btn popup-edit" onclick="showPopupEditMode('${cache.gc}')"><span class="popup-edit-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg></span>Edit</button>
-              <button class="popup-btn popup-delete" onclick="showDeleteConfirm('${cache.gc}')" title="Delete" aria-label="Delete cache"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11V17"/><path d="M14 11V17"/><path d="M4 7H20"/><path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z"/><path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"/></svg></button>
+              <button class="popup-btn popup-move" onclick="${jsCall("enterMoveMode", cache.gc)}" title="Move" aria-label="Move cache"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9V3.34315M12 3.34315L9.17157 6.17157M12 3.34315L14.8284 6.17157"/><path d="M15 12H20.6569M20.6569 12L17.8284 9.17157M20.6569 12L17.8284 14.8284"/><path d="M9 12H3.34315M3.34315 12L6.17157 14.8284M3.34315 12L6.17157 9.17157"/><path d="M12 15V20.6569M12 20.6569L14.8284 17.8284M12 20.6569L9.17157 17.8284"/></svg></button>
+              <button class="popup-btn popup-edit" onclick="${jsCall("showPopupEditMode", cache.gc)}"><span class="popup-edit-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.99997H6C4.89543 3.99997 4 4.8954 4 5.99997V18C4 19.1045 4.89543 20 6 20H18C19.1046 20 20 19.1045 20 18V12M18.4142 8.41417L19.5 7.32842C20.281 6.54737 20.281 5.28104 19.5 4.5C18.7189 3.71895 17.4526 3.71895 16.6715 4.50001L15.5858 5.58575M18.4142 8.41417L12.3779 14.4505C12.0987 14.7297 11.7431 14.9201 11.356 14.9975L8.41422 15.5858L9.00257 12.6441C9.08001 12.2569 9.27032 11.9013 9.54951 11.6221L15.5858 5.58575M18.4142 8.41417L15.5858 5.58575"/></svg></span>Edit</button>
+              <button class="popup-btn popup-delete" onclick="${jsCall("showDeleteConfirm", cache.gc)}" title="Delete" aria-label="Delete cache"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11V17"/><path d="M14 11V17"/><path d="M4 7H20"/><path d="M6 7H12H18V18C18 19.6569 16.6569 21 15 21H9C7.34315 21 6 19.6569 6 18V7Z"/><path d="M9 5C9 3.89543 9.89543 3 11 3H13C14.1046 3 15 3.89543 15 5V7H9V5Z"/></svg></button>
             </div>
           </div>
         `)
@@ -907,9 +968,8 @@
       const cache = caches.find(c => c.gc === gc);
       if (!cache) return;
       editCustomColor = cache.customColor || null;
-      const dotColor = cache.customColor || TYPE_COLOR[cache.cacheType];
-      const TYPE_LABELS = { traditional: "Traditional Cache", multi: "Multi-Cache", mystery: "Mystery Cache", placeholder: "Placeholder" };
-      const typeLabel = TYPE_LABELS[cache.cacheType] || "Traditional Cache";
+      const dotColor = cacheColor(cache);
+      const typeLabel = cacheTypeLabel(cache.cacheType);
 
       const el = document.createElement("div");
       el.className = "popup-inner";
@@ -972,12 +1032,9 @@
 
       const opts = document.createElement("div");
       opts.className = "type-options";
-      const typeChoices = [
-        ["traditional", "Traditional Cache"],
-        ["multi", "Multi-Cache"],
-        ["mystery", "Mystery Cache"],
-        ...(cache.cacheType === "placeholder" ? [["placeholder", "Placeholder"]] : [])
-      ];
+      const typeChoices = CACHE_TYPE_KEYS
+        .filter(type => type !== "placeholder" || cache.cacheType === "placeholder")
+        .map(type => [type, cacheTypeLabel(type)]);
       typeChoices.forEach(([val, label]) => {
         const opt = document.createElement("div");
         opt.className = "type-option" + (cache.cacheType === val ? " selected" : "");
@@ -1037,6 +1094,11 @@
       if (cache) showPopup(cache);
     }
 
+    function showPopupByGc(gc) {
+      const cache = caches.find(c => c.gc === gc);
+      if (cache) showPopup(cache);
+    }
+
     let editCustomColor = null;
 
     function selectEditCacheType(value, label) {
@@ -1049,7 +1111,7 @@
       if (d) d.open = false;
       editCustomColor = null;
       const dot = document.getElementById("edit-type-dot");
-      if (dot) dot.style.background = TYPE_COLOR[value] || TYPE_COLOR.mystery;
+      if (dot) dot.style.background = cacheTypeColor(value);
     }
 
     function openEditColorPicker() {
@@ -1078,7 +1140,7 @@
       const origLon = cache.lon;
       const origLat = cache.lat;
 
-      const color = cache.customColor || TYPE_COLOR[cache.cacheType];
+      const color = cacheColor(cache);
       const el = document.createElement('div');
       el.className = 'move-marker';
       el.style.background = color;
@@ -1105,10 +1167,10 @@
           .setLngLat([lng, lat])
           .setHTML(`
             <div class="popup-confirm">
-              <div class="popup-confirm-text">Move <strong>${cache.cacheName}</strong> here?</div>
+              <div class="popup-confirm-text">Move <strong>${escapeHtml(cache.cacheName)}</strong> here?</div>
               <div class="popup-confirm-actions">
-                <button class="popup-confirm-no" onclick="cancelMove('${gc}', ${origLon}, ${origLat})">Cancel</button>
-                <button class="popup-confirm-yes" style="background:#2563eb" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'" onclick="confirmMove('${gc}', ${lng}, ${lat})">Save</button>
+                <button class="popup-confirm-no" onclick="${jsCall("cancelMove", gc, origLon, origLat)}">Cancel</button>
+                <button class="popup-confirm-yes" style="background:#2563eb" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'" onclick="${jsCall("confirmMove", gc, lng, lat)}">Save</button>
               </div>
             </div>
           `)
@@ -1122,10 +1184,7 @@
       if (_activeMoveMarker) { _activeMoveMarker.remove(); _activeMoveMarker = null; }
       cache.lon = lng;
       cache.lat = lat;
-      const record = { cacheName: cache.cacheName, gc: cache.gc, cacheType: cache.cacheType, lon: lng, lat };
-      if (cache.primaryGc) record.primaryGc = cache.primaryGc;
-      if (cache.radius)    record.radius    = cache.radius;
-      await dbSave(db, record);
+      await dbSave(db, toStoredCache(cache));
       bumpChangeCount();
       refreshMapSources();
       showPopup(cache);
@@ -1157,7 +1216,7 @@
 
       const { lat, lon } = parsed;
       const newCache = { cacheName, gc: newGc, cacheType, lon, lat, ...(editCustomColor ? { customColor: editCustomColor } : {}) };
-      const color = newCache.customColor || TYPE_COLOR[newCache.cacheType];
+      const color = cacheColor(newCache);
 
       if (newGc !== oldGc) {
         await dbDelete(db, oldGc);
@@ -1198,10 +1257,10 @@
         .setLngLat([cache.lon, cache.lat])
         .setHTML(`
           <div class="popup-confirm">
-            <div class="popup-confirm-text">Are you sure you want to delete <strong>${cache.cacheName}</strong>?</div>
+            <div class="popup-confirm-text">Are you sure you want to delete <strong>${escapeHtml(cache.cacheName)}</strong>?</div>
             <div class="popup-confirm-actions">
-              <button class="popup-confirm-no" onclick="showPopup(caches.find(c=>c.gc==='${gc}'))">Cancel</button>
-              <button class="popup-confirm-yes" onclick="deleteCache('${gc}')">Delete</button>
+              <button class="popup-confirm-no" onclick="${jsCall("showPopupByGc", gc)}">Cancel</button>
+              <button class="popup-confirm-yes" onclick="${jsCall("deleteCache", gc)}">Delete</button>
             </div>
           </div>
         `)
@@ -1225,17 +1284,24 @@
 
     const list = document.getElementById("cache-list");
 
+    function cacheMatchesQuery(cache, query) {
+      return query === ""
+        || cache.cacheName.toLowerCase().includes(query)
+        || cache.gc.toLowerCase().includes(query);
+    }
+
+    function setCacheVisible(cache, visible) {
+      if (cache._li) cache._li.style.display = visible ? "" : "none";
+    }
+
     function filterCaches(query) {
       const q = query.trim().toLowerCase();
-      let anyVisible = false;
-      caches.forEach(cache => {
-        if (!cache._li) return;
-        const match = q === ""
-          || cache.cacheName.toLowerCase().includes(q)
-          || cache.gc.toLowerCase().includes(q);
-        cache._li.style.display = match ? "" : "none";
-        if (match) anyVisible = true;
+      const visibleStates = caches.map(cache => {
+        const visible = !!cache._li && cacheMatchesQuery(cache, q);
+        setCacheVisible(cache, visible);
+        return visible;
       });
+      const anyVisible = visibleStates.some(Boolean);
       document.getElementById("search-empty").style.display = q !== "" && !anyVisible ? "" : "none";
     }
 
@@ -1246,7 +1312,7 @@
       cache._li = li;
       const dot = document.createElement("span");
       dot.className = "cache-dot";
-      dot.style.background = cache.customColor || TYPE_COLOR[cache.cacheType];
+      dot.style.background = cacheColor(cache);
       const name = document.createElement("span");
       name.className = "cache-list-name";
       name.textContent = cache.cacheName;
@@ -1319,7 +1385,7 @@
 
     function cacheCircleFeature(cache) {
       const f = geoCircle([cache.lon, cache.lat], cache.radius || RADIUS);
-      f.properties = { gc: cache.gc, color: cache.customColor || TYPE_COLOR[cache.cacheType], placeholder: cache.cacheType === "placeholder" };
+      f.properties = { gc: cache.gc, color: cacheColor(cache), placeholder: cache.cacheType === "placeholder" };
       return f;
     }
 
@@ -1327,21 +1393,24 @@
       const label = cache.cacheName.length > 40 ? cache.cacheName.slice(0, 40) + "…" : cache.cacheName;
       return {
         type: "Feature",
-        properties: { gc: cache.gc, color: cache.customColor || TYPE_COLOR[cache.cacheType], label, placeholder: cache.cacheType === "placeholder" },
+        properties: { gc: cache.gc, color: cacheColor(cache), label, placeholder: cache.cacheType === "placeholder" },
         geometry: { type: "Point", coordinates: [cache.lon, cache.lat] }
       };
     }
 
-    function refreshMapSources() {
+    function rebuildCacheFeatureCollections() {
       circlesFC = { type: "FeatureCollection", features: caches.map(cacheCircleFeature) };
       dotsFC    = { type: "FeatureCollection", features: caches.map(cacheDotFeature) };
+    }
+
+    function refreshMapSources() {
+      rebuildCacheFeatureCollections();
       if (map.getSource("caches-circles")) map.getSource("caches-circles").setData(circlesFC);
       if (map.getSource("caches-dots"))    map.getSource("caches-dots").setData(dotsFC);
     }
 
     function setupSharedLayers() {
-      circlesFC = { type: "FeatureCollection", features: caches.map(cacheCircleFeature) };
-      dotsFC    = { type: "FeatureCollection", features: caches.map(cacheDotFeature) };
+      rebuildCacheFeatureCollections();
 
       map.addSource("caches-circles", { type: "geojson", data: circlesFC });
       map.addLayer({ id: "caches-fill",       type: "fill", source: "caches-circles", paint: { "fill-color": ["get", "color"], "fill-opacity": 0.35 } });
@@ -1368,11 +1437,6 @@
 
     const popup = new maplibregl.Popup({ offset: 10, closeButton: false });
 
-    function addCacheToMap() {
-      refreshMapSources();
-    }
-
-
     function updateSyncWarning() {
       const count = parseInt(localStorage.getItem("changeCount") || "0", 10);
       const badge = document.getElementById("change-badge");
@@ -1390,6 +1454,10 @@
     function updateCacheCount() {
       const n = caches.filter(c => c.cacheType !== "placeholder").length;
       document.getElementById("cache-empty").style.display = n === 0 ? "" : "none";
+    }
+
+    function countCachesByType(type) {
+      return caches.filter(c => c.cacheType === type).length;
     }
 
     function bumpChangeCount() {
@@ -1493,27 +1561,29 @@
     map.on("click", e => { if (pickMode) handlePickClick(e); });
     map.on("contextmenu", e => { e.preventDefault(); handlePickClick(e); });
 
-    function copyCoords(btn, text) {
-      const orig = btn.textContent;
-      btn.textContent = "Copied!";
-      setTimeout(() => { btn.textContent = orig; }, 1500);
+    function writeClipboard(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).catch(() => execCopy(text));
       } else {
         execCopy(text);
       }
     }
-    function copyPopupCoords(el) {
-      const text = el.dataset.coords;
+
+    function copyWithFeedback(el, text) {
       const orig = el.textContent;
       el.textContent = "Copied!";
       setTimeout(() => { el.textContent = orig; }, 1500);
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).catch(() => execCopy(text));
-      } else {
-        execCopy(text);
-      }
+      writeClipboard(text);
     }
+
+    function copyCoords(btn, text) {
+      copyWithFeedback(btn, text);
+    }
+
+    function copyPopupCoords(el) {
+      copyWithFeedback(el, el.dataset.coords);
+    }
+
     function execCopy(text) {
       const ta = document.createElement("textarea");
       ta.value = text;
@@ -1530,22 +1600,22 @@
       await dbSave(db, cache);
       bumpChangeCount();
       caches.push(cache);
-      addCacheToMap(cache);
+      refreshMapSources();
       coordPopup.remove();
       clearPickPreview();
     }
 
     let customColor = null;
 
-    function selectCacheType(value, label) {
+    function selectCacheType(value) {
       document.getElementById("f-type").value = value;
-      document.getElementById("f-type-display").textContent = label;
+      document.getElementById("f-type-display").textContent = cacheTypeLabel(value);
       document.querySelectorAll(".type-option").forEach(el => {
         el.classList.toggle("selected", el.dataset.value === value);
       });
       document.querySelector(".type-details").open = false;
       updateTypeDot();
-      const hasWaypoints = value === "multi" || value === "mystery";
+      const hasWaypoints = cacheTypeMeta(value).supportsWaypoints;
       document.getElementById("add-waypoint-btn").style.display = hasWaypoints ? "block" : "none";
       if (!hasWaypoints) document.getElementById("multi-extra-coords").innerHTML = "";
     }
@@ -1583,7 +1653,7 @@
     function updateTypeDot() {
       customColor = null;
       const val = document.getElementById("f-type").value;
-      document.getElementById("f-type-dot").style.background = TYPE_COLOR[val] || TYPE_COLOR.mystery;
+      document.getElementById("f-type-dot").style.background = cacheTypeColor(val);
     }
 
     function openColorPicker() {
@@ -1616,10 +1686,10 @@
       document.getElementById("f-name").value = "";
       document.getElementById("f-gc").value = "";
       document.getElementById("f-type").value = "traditional";
-      document.getElementById("f-type-display").textContent = "Traditional";
+      document.getElementById("f-type-display").textContent = cacheTypeLabel("traditional");
       document.querySelectorAll(".type-option").forEach(el => el.classList.toggle("selected", el.dataset.value === "traditional"));
       document.querySelector(".type-details").open = false;
-      document.getElementById("f-type-dot").style.background = TYPE_COLOR.traditional;
+      document.getElementById("f-type-dot").style.background = cacheTypeColor("traditional");
       document.getElementById("f-coords").value = "";
       document.getElementById("f-coords-error").style.display = "none";
       document.getElementById("multi-extra-coords").innerHTML = "";
@@ -1794,12 +1864,12 @@
         }
 
         const radius = idx.rad  !== -1 ? parseInt(cols[idx.rad], 10) : NaN;
-        const COLOR_ALIASES = { green: TYPE_COLOR.traditional, blue: TYPE_COLOR.mystery, orange: TYPE_COLOR.multi };
+        const COLOR_ALIASES = { green: cacheTypeColor("traditional"), blue: cacheTypeColor("mystery"), orange: cacheTypeColor("multi") };
         const rawColor = idx.col !== -1 ? (cols[idx.col] || null) : null;
         const color    = rawColor ? (COLOR_ALIASES[rawColor.toLowerCase()] || rawColor) : null;
         const gc       = idx.gc   !== -1 ? (cols[idx.gc]  || null) : null;
         const rawType  = idx.type !== -1 ? (cols[idx.type] || "").toLowerCase() : "";
-        const cacheType = Object.keys(TYPE_COLOR).includes(rawType) ? rawType : "traditional";
+        const cacheType = CACHE_TYPE_KEYS.includes(rawType) ? rawType : "traditional";
 
         const primaryGc = idx.primaryGc !== -1 ? (cols[idx.primaryGc] || null) : null;
 
@@ -1878,16 +1948,16 @@
     }
 
     function updateExportTotal() {
-      const total = ["traditional", "multi", "mystery", "placeholder"]
+      const total = CACHE_TYPE_KEYS
         .filter(t => document.getElementById(`exp-${t}`)?.checked)
-        .reduce((sum, t) => sum + caches.filter(c => c.cacheType === t).length, 0);
+        .reduce((sum, t) => sum + countCachesByType(t), 0);
       const el = document.getElementById("export-total-label");
       if (el) el.textContent = `${total} cache${total !== 1 ? "s" : ""} will be exported`;
     }
 
     function openExportModal() {
-      ["traditional", "multi", "mystery", "placeholder"].forEach(type => {
-        const count = caches.filter(c => c.cacheType === type).length;
+      CACHE_TYPE_KEYS.forEach(type => {
+        const count = countCachesByType(type);
         const el = document.getElementById(`exp-count-${type}`);
         if (el) el.textContent = count;
       });
@@ -1910,37 +1980,30 @@
       updateExportTotal();
     });
 
+    function selectedExportTypes() {
+      return CACHE_TYPE_KEYS.filter(type => document.getElementById(`exp-${type}`)?.checked);
+    }
+
+    function cacheExportRow(cache) {
+      return [
+        cache.cacheName,
+        cache.gc,
+        cache.primaryGc || "",
+        cache.cacheType,
+        cache.lat.toFixed(6),
+        cache.lon.toFixed(6),
+        cache.radius || "",
+        cache.customColor || "",
+      ];
+    }
+
     function exportCaches() {
-      const selectedTypes = ["traditional", "multi", "mystery", "placeholder"]
-        .filter(t => document.getElementById(`exp-${t}`)?.checked);
-      const headers = ["name", "gc_code", "primary_gc", "cache_type", "latitude", "longitude", "circle_radius", "custom_color"];
-
-      function csvCell(val) {
-        const s = val == null ? "" : String(val);
-        return /[,"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-      }
-
+      const selectedTypes = selectedExportTypes();
       const rows = caches
-        .filter(c => selectedTypes.includes(c.cacheType))
-        .map(c => [
-          c.cacheName,
-          c.gc,
-          c.primaryGc || "",
-          c.cacheType,
-          c.lat.toFixed(6),
-          c.lon.toFixed(6),
-          c.radius || "",
-          c.customColor || "",
-        ]);
-
-      const content = [headers, ...rows].map(r => r.map(csvCell).join(",")).join("\n");
-      const blob = new Blob([content], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "caches.csv";
-      a.click();
-      URL.revokeObjectURL(url);
+        .filter(cache => selectedTypes.includes(cache.cacheType))
+        .map(cacheExportRow);
+      const content = csvRowsToString([EXPORT_HEADERS, ...rows]);
+      downloadBlob(content, "text/csv", "caches.csv");
       closeExportModal();
     }
 
@@ -1962,19 +2025,13 @@
     function downloadPage() {
       localStorage.setItem("changeCount", "0");
       updateSyncWarning();
-      const clean = caches.map(({ _li, ...rest }) => rest);
+      const clean = caches.map(toStoredCache);
       const indent = "      ";
       const lines = clean.map(c => `${indent}  ${JSON.stringify(c)},`).join("\n");
       const block = `/* BEGIN_CACHES */\n${indent}const INITIAL_CACHES = [\n${lines}\n${indent}];\n${indent}/* END_CACHES */`;
       let html = document.documentElement.outerHTML;
       html = html.replace(/\/\* BEGIN_CACHES \*\/[\s\S]*?\/\* END_CACHES \*\//, block);
-      const blob = new Blob([html], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "map.html";
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(html, "text/html", "map.html");
       document.getElementById("remind-overlay").classList.add("open");
     }
 
