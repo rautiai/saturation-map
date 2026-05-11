@@ -215,7 +215,7 @@
     .popup-edit-fields .type-select-wrapper { text-transform: none; letter-spacing: normal; font-weight: normal; }
 
     .edit-type-row { display: flex; border: 1px solid #4b5563; border-radius: 0.625rem; background: #374151; overflow: hidden; height: 2.75rem; }
-    .edit-color-btn { width: 2.25rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: none; border-right: 1px solid #4b5563; border-radius: 0.625rem 0 0 0.625rem; background: transparent; cursor: pointer; padding: 0; box-shadow: none; transition: background 0.15s; }
+    .edit-color-btn { width: 2.25rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: none; border-right: 1px solid #4b5563; border-radius: 0.625rem 0 0 0.625rem; background: transparent; cursor: pointer; padding: 0; box-shadow: none; transition: background 0.15s; position: relative; overflow: hidden; }
     .edit-color-btn:hover { background: rgba(255,255,255,0.06); }
     .edit-type-details { flex: 1; display: flex; flex-direction: column; position: relative; }
     .edit-type-details summary { flex: 1; list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 0 0.6rem 0 0.75rem; cursor: pointer; font-size: 0.9rem; font-family: inherit; font-weight: 400; color: #f3f4f6; user-select: none; overflow: hidden; }
@@ -353,7 +353,7 @@
     .type-select-wrapper { position: relative; }
     .type-color-group { display: flex; min-height: 2.25rem; border: 1px solid #4b5563; border-radius: 0.625rem; background: #374151; transition: border-color 0.15s; }
     .type-select-wrapper:has(details[open]) .type-color-group { border-bottom-right-radius: 0; }
-    #f-type-color-btn { width: 2.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: none; border-right: 1px solid #4b5563; border-radius: 0.625rem 0 0 0.625rem; background: transparent; cursor: pointer; padding: 0; transition: background 0.15s; box-shadow: none; }
+    #f-type-color-btn { width: 2.5rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: none; border-right: 1px solid #4b5563; border-radius: 0.625rem 0 0 0.625rem; background: transparent; cursor: pointer; padding: 0; transition: background 0.15s; box-shadow: none; position: relative; overflow: hidden; }
     #f-type-color-btn:hover { background: rgba(255,255,255,0.06); }
     .type-details { flex: 1; display: flex; flex-direction: column; position: relative; }
     .type-details summary { flex: 1; list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 0 0.6rem 0 0.75rem; cursor: pointer; font-size: 0.9rem; font-family: inherit; font-weight: 400; color: #f3f4f6; user-select: none; }
@@ -706,10 +706,10 @@
         <div class="modal-field">Cache Type
           <div class="type-select-wrapper">
             <div class="type-color-group">
-              <button type="button" id="f-type-color-btn" onclick="openColorPicker()" title="Pick custom color" aria-label="Pick custom color">
+              <button type="button" id="f-type-color-btn" title="Pick custom color" aria-label="Pick custom color">
                 <span id="f-type-dot" style="width:1.1rem;height:1.1rem;border-radius:50%;display:block;background:#22c55e;box-shadow:0 0 0 1.5px rgba(0,0,0,0.12);pointer-events:none;"></span>
+                <input type="color" id="f-type-color-input" tabindex="-1" aria-hidden="true" aria-label="Custom cache color" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;" oninput="onColorInput(this.value)" onchange="onColorInput(this.value)">
               </button>
-              <input type="color" id="f-type-color-input" tabindex="-1" aria-hidden="true" aria-label="Custom cache color" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;" oninput="onColorInput(this.value)" onchange="onColorInput(this.value)">
               <input type="hidden" id="f-type" value="traditional">
               <details class="type-details">
                 <summary>
@@ -1016,20 +1016,22 @@
       colorBtn.className = "edit-color-btn";
       colorBtn.title = "Pick custom color";
       colorBtn.setAttribute("aria-label", "Pick custom color");
-      colorBtn.addEventListener("click", openEditColorPicker);
       const dot = document.createElement("span");
       dot.id = "edit-type-dot";
       dot.style.cssText = `width:1.1rem;height:1.1rem;border-radius:50%;display:block;background:${dotColor};box-shadow:0 0 0 1.5px rgba(0,0,0,0.12);pointer-events:none;`;
-      colorBtn.appendChild(dot);
 
       const colorInput = document.createElement("input");
       colorInput.type = "color";
       colorInput.id = "edit-type-color-input";
       colorInput.tabIndex = -1;
       colorInput.setAttribute("aria-hidden", "true");
-      colorInput.style.cssText = "position:absolute;opacity:0;pointer-events:none;width:0;height:0;";
+      colorInput.style.cssText = "position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;";
+      colorInput.value = editCustomColor || dotColor;
+      colorInput.addEventListener("pointerdown", () => { colorInput.value = rgbToHex(dot.style.background) || editCustomColor || "#22c55e"; });
       colorInput.addEventListener("input", e => onEditColorInput(e.target.value));
       colorInput.addEventListener("change", e => onEditColorInput(e.target.value));
+
+      colorBtn.append(dot, colorInput);
 
       const typeHidden = document.createElement("input");
       typeHidden.type = "hidden";
@@ -1070,7 +1072,7 @@
       });
 
       details.append(summary, opts);
-      typeGroup.append(colorBtn, colorInput, typeHidden, details);
+      typeGroup.append(colorBtn, typeHidden, details);
       typeWrapper.appendChild(typeGroup);
       typeLabel_.appendChild(typeWrapper);
 
@@ -1139,15 +1141,6 @@
       if (dot) dot.style.background = cacheTypeColor(value);
     }
 
-    function openEditColorPicker() {
-      const input = document.getElementById("edit-type-color-input");
-      const dot = document.getElementById("edit-type-dot");
-      if (!input || !dot) return;
-      input.value = dot.style.background.match(/^#[0-9a-f]{6}$/i)?.[0]
-        || rgbToHex(dot.style.background)
-        || "#22c55e";
-      input.click();
-    }
 
     function onEditColorInput(hex) {
       editCustomColor = hex;
@@ -1724,14 +1717,9 @@
       document.getElementById("f-type-dot").style.background = cacheTypeColor(val);
     }
 
-    function openColorPicker() {
-      const input = document.getElementById("f-type-color-input");
-      input.value = document.getElementById("f-type-dot").style.background
-        .replace(/\s/g, "").match(/^#[0-9a-f]{6}$/i)?.[0]
-        || rgbToHex(document.getElementById("f-type-dot").style.background)
-        || "#22c55e";
-      input.click();
-    }
+    document.getElementById("f-type-color-input").addEventListener("pointerdown", function () {
+      this.value = rgbToHex(document.getElementById("f-type-dot").style.background) || "#22c55e";
+    });
 
     function rgbToHex(rgb) {
       const m = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
