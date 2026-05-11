@@ -839,6 +839,14 @@
 
     let db;
     let cacheRecords = [];
+    let cacheMap = new Map(); // gc → cache, mirrors cacheRecords for O(1) lookup
+
+    function lsGet(key, fallback = null) {
+      try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+    }
+    function lsSet(key, val) {
+      try { localStorage.setItem(key, val); } catch {}
+    }
 
     const CACHE_TYPES = {
       traditional: { label: "Traditional Cache", color: "#22c55e", supportsWaypoints: false },
@@ -982,7 +990,7 @@
     }
 
     function showPopupEditMode(gc) {
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (!cache) return;
       editCustomColor = cache.customColor || null;
       const dotColor = cacheColor(cache);
@@ -1107,12 +1115,12 @@
     }
 
     function cancelEdit(gc) {
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (cache) showPopup(cache);
     }
 
     function showPopupByGc(gc) {
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (cache) showPopup(cache);
     }
 
@@ -1150,7 +1158,7 @@
     let _activeMoveMarker = null;
 
     function enterMoveMode(gc) {
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (!cache) return;
       popup.remove();
 
@@ -1168,12 +1176,13 @@
         .setLngLat([origLon, origLat])
         .addTo(map);
 
+      const dragCf = circlesFC.features.find(f => f.properties.gc === gc);
+      const dragDf = dotsFC.features.find(f => f.properties.gc === gc);
+
       _activeMoveMarker.on('drag', () => {
         const { lng, lat } = _activeMoveMarker.getLngLat();
-        const cf = circlesFC.features.find(f => f.properties.gc === gc);
-        if (cf) cf.geometry = geoCircle([lng, lat], cache.radius || RADIUS).geometry;
-        const df = dotsFC.features.find(f => f.properties.gc === gc);
-        if (df) df.geometry.coordinates = [lng, lat];
+        if (dragCf) dragCf.geometry = geoCircle([lng, lat], cache.radius || RADIUS).geometry;
+        if (dragDf) dragDf.geometry.coordinates = [lng, lat];
         if (map.getSource("caches-circles")) map.getSource("caches-circles").setData(circlesFC);
         if (map.getSource("caches-dots"))    map.getSource("caches-dots").setData(dotsFC);
       });
@@ -1196,22 +1205,24 @@
     }
 
     async function confirmMove(gc, lng, lat) {
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (!cache) return;
       if (_activeMoveMarker) { _activeMoveMarker.remove(); _activeMoveMarker = null; }
       cache.lon = lng;
       cache.lat = lat;
       await dbSave(db, toStoredCache(cache));
       bumpChangeCount();
-      refreshMapSources();
+      patchCacheFeature(cache);
+      applyMapSources();
       showPopup(cache);
     }
 
     function cancelMove(gc, origLon, origLat) {
       if (_activeMoveMarker) { _activeMoveMarker.remove(); _activeMoveMarker = null; }
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (!cache) return;
-      refreshMapSources();
+      patchCacheFeature(cache);
+      applyMapSources();
       showPopup(cache);
     }
 
@@ -1239,11 +1250,16 @@
         await dbDelete(db, oldGc);
         await dbSave(db, newCache);
         cacheRecords[idx] = newCache;
+        cacheMap.delete(oldGc);
+        cacheMap.set(newGc, newCache);
+        removeCacheFeature(oldGc);
       } else {
         await dbSave(db, newCache);
         cacheRecords[idx] = newCache;
+        cacheMap.set(newGc, newCache);
       }
-      refreshMapSources();
+      patchCacheFeature(newCache);
+      applyMapSources();
 
       // Update sidebar li in place, re-wire click listener
       const oldLi = oldCache._li;
@@ -1268,7 +1284,7 @@
     }
 
     function showDeleteConfirm(gc) {
-      const cache = cacheRecords.find(c => c.gc === gc);
+      const cache = cacheMap.get(gc);
       if (!cache) return;
       popup
         .setLngLat([cache.lon, cache.lat])
@@ -1294,7 +1310,9 @@
 
       if (cache._li) cache._li.remove();
       cacheRecords.splice(idx, 1);
-      refreshMapSources();
+      cacheMap.delete(gc);
+      removeCacheFeature(gc);
+      applyMapSources();
       updateCacheCount();
       popup.remove();
     }
@@ -1347,7 +1365,7 @@
       style: MAPTILER_STYLE_URL,
       center: CENTER,
       zoom: 14,
-      pitch: localStorage.getItem("map3d") === "false" ? 0 : 60,
+      pitch: lsGet("map3d") === "false" ? 0 : 60,
       navigationControl: false,
       geolocateControl: false,
       fullscreenControl: false,
@@ -1357,7 +1375,7 @@
     const mapReady = new Promise(resolve => map.once("load", resolve));
 
     // Compass + 3D controls
-    let mapIs3D = localStorage.getItem("map3d") !== "false";
+    let mapIs3D = lsGet("map3d") !== "false";
     document.getElementById("tilt-btn").classList.toggle("is-3d", mapIs3D);
 
     function resetNorth() {
@@ -1366,7 +1384,7 @@
 
     function toggleTilt() {
       mapIs3D = !mapIs3D;
-      localStorage.setItem("map3d", mapIs3D);
+      lsSet("map3d", mapIs3D);
       map.easeTo({ pitch: mapIs3D ? 60 : 0, duration: 500 });
       document.getElementById("tilt-btn").classList.toggle("is-3d", mapIs3D);
     }
@@ -1432,10 +1450,28 @@
       dotsFC    = { type: "FeatureCollection", features: cacheRecords.map(cacheDotFeature) };
     }
 
-    function refreshMapSources() {
-      rebuildCacheFeatureCollections();
+    function applyMapSources() {
       if (map.getSource("caches-circles")) map.getSource("caches-circles").setData(circlesFC);
       if (map.getSource("caches-dots"))    map.getSource("caches-dots").setData(dotsFC);
+    }
+
+    function patchCacheFeature(cache) {
+      const ci = circlesFC.features.findIndex(f => f.properties.gc === cache.gc);
+      const di = dotsFC.features.findIndex(f => f.properties.gc === cache.gc);
+      const cf = cacheCircleFeature(cache);
+      const df = cacheDotFeature(cache);
+      if (ci !== -1) circlesFC.features[ci] = cf; else circlesFC.features.push(cf);
+      if (di !== -1) dotsFC.features[di] = df;    else dotsFC.features.push(df);
+    }
+
+    function removeCacheFeature(gc) {
+      circlesFC.features = circlesFC.features.filter(f => f.properties.gc !== gc);
+      dotsFC.features    = dotsFC.features.filter(f => f.properties.gc !== gc);
+    }
+
+    function refreshMapSources() {
+      rebuildCacheFeatureCollections();
+      applyMapSources();
     }
 
     function setupSharedLayers() {
@@ -1457,7 +1493,7 @@
 
       map.on("click", "caches-fill", e => {
         const gc = e.features[0].properties.gc;
-        const cache = cacheRecords.find(c => c.gc === gc);
+        const cache = cacheMap.get(gc);
         if (cache) showPopup(cache);
       });
       map.on("mouseenter", "caches-fill", () => { map.getCanvas().style.cursor = "pointer"; });
@@ -1467,7 +1503,7 @@
     const popup = new maptilersdk.Popup({ offset: 10, closeButton: false });
 
     function updateSyncWarning() {
-      const count = parseInt(localStorage.getItem("changeCount") || "0", 10);
+      const count = parseInt(lsGet("changeCount", "0"), 10);
       const badge = document.getElementById("change-badge");
       if (count > 0) {
         badge.textContent = count;
@@ -1490,8 +1526,8 @@
     }
 
     function bumpChangeCount() {
-      const count = parseInt(localStorage.getItem("changeCount") || "0", 10);
-      localStorage.setItem("changeCount", count + 1);
+      const count = parseInt(lsGet("changeCount", "0"), 10);
+      lsSet("changeCount", count + 1);
       updateSyncWarning();
     }
 
@@ -1505,6 +1541,7 @@
       }
 
       cacheRecords = stored;
+      cacheMap = new Map(stored.map(c => [c.gc, c]));
       list.innerHTML = "";
       [...cacheRecords].reverse().forEach(addCacheToList);
       updateCacheCount();
@@ -1629,7 +1666,9 @@
       await dbSave(db, cache);
       bumpChangeCount();
       cacheRecords.push(cache);
-      refreshMapSources();
+      cacheMap.set(cache.gc, cache);
+      patchCacheFeature(cache);
+      applyMapSources();
       coordPopup.remove();
       clearPickPreview();
     }
@@ -1771,6 +1810,7 @@
       for (const cache of toSave) {
         await dbSave(db, cache);
         cacheRecords.push(cache);
+        cacheMap.set(cache.gc, cache);
         addCacheToList(cache);
       }
       refreshMapSources();
@@ -1858,6 +1898,7 @@
         return { rows: [], skipped: [], error: "Missing required columns: name, latitude, longitude" };
       }
 
+      const COLOR_ALIASES = { green: cacheTypeColor("traditional"), blue: cacheTypeColor("mystery"), orange: cacheTypeColor("multi") };
       const rows = [], skipped = [];
 
       function splitCsvRow(line, d) {
@@ -1893,7 +1934,6 @@
         }
 
         const radius = idx.rad  !== -1 ? parseInt(cols[idx.rad], 10) : NaN;
-        const COLOR_ALIASES = { green: cacheTypeColor("traditional"), blue: cacheTypeColor("mystery"), orange: cacheTypeColor("multi") };
         const rawColor = idx.col !== -1 ? (cols[idx.col] || null) : null;
         const color    = rawColor ? (COLOR_ALIASES[rawColor.toLowerCase()] || rawColor) : null;
         const gc       = idx.gc   !== -1 ? (cols[idx.gc]  || null) : null;
@@ -1953,6 +1993,7 @@
           await dbSave(db, cache);
           bumpChangeCount();
           cacheRecords.push(cache);
+          cacheMap.set(cache.gc, cache);
           addCacheToList(cache);
           imported++;
         } catch (err) {
@@ -2037,10 +2078,10 @@
     }
 
     function hasSeenIntro() {
-      try { return !!localStorage.getItem('intro_seen'); } catch { return false; }
+      return !!lsGet('intro_seen');
     }
     function markIntroSeen() {
-      try { localStorage.setItem('intro_seen', '1'); } catch {}
+      lsSet('intro_seen', '1');
     }
     function closeIntroModal() {
       markIntroSeen();
@@ -2052,14 +2093,14 @@
     }
 
     function downloadPage() {
-      localStorage.setItem("changeCount", "0");
+      lsSet("changeCount", "0");
       updateSyncWarning();
       const clean = cacheRecords.map(toStoredCache);
       const indent = "      ";
       const lines = clean.map(c => `${indent}  ${JSON.stringify(c)},`).join("\n");
       const block = `/* BEGIN_CACHES */\n${indent}const INITIAL_CACHES = [\n${lines}\n${indent}];\n${indent}/* END_CACHES */`;
       let html = document.documentElement.outerHTML;
-      html = html.replace(/\/\* BEGIN_CACHES \*\/[\s\S]*?\/\* END_CACHES \*\//, block);
+      html = html.replace(/\/\* BEGIN_CACHES \*\/[\s\S]*?\/\* END_CACHES \*\//, () => block);
       downloadBlob(html, "text/html", "map.html");
       document.getElementById("remind-overlay").classList.add("open");
     }
